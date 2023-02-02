@@ -1,0 +1,33 @@
+{
+    "configurations": [
+        {
+            "name": "Docker: Python - General",
+            "type": "docker",
+            "request": "launch",
+            "preLaunchTask": "docker-run: debug",
+            "python": {
+                "pathMappings": [
+                    {
+                        "localRoot": "${workspaceFolder}",
+                        "remoteRoot": "/app"
+                    }
+                ],
+                "projectType": "general"
+            }
+        },
+        {
+            "name": "Python - set_mlp_sequential",
+            "type": "python",
+            "request": "launch",
+            "program": "set_mlp_sequential.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python - parallel training (setMPI_model)",
+            "type": "python",
+            "request": "launch",
+            "program": "parallel_training.py",
+            "console": "integratedTerminal"
+        }
+    ]
+}
