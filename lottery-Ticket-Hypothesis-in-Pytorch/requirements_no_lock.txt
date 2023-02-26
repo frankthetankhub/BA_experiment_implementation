@@ -1,0 +1,17 @@
+cycler 
+kiwisolver 
+matplotlib 
+numpy 
+pandas 
+Pillow 
+protobuf 
+pyparsing 
+python-dateutil 
+pytz 
+scipy 
+seaborn 
+six 
+tensorboardX 
+torch 
+torchvision 
+tqdm 

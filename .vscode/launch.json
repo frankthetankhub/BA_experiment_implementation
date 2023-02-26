@@ -1,0 +1,43 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Download data",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/jan/BA/code/lottery_ticket_hypothesis/mnist_fc/download_data.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: lth-pytorch, fashion mnist",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/jan/BA/code/lottery_ticket_hypothesis/train.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["--output_dir", "/home/jan/BA/code/lottery-Ticket-Hypothesis-in-Pytorch/main.py"]
+        },
+        {
+            "name": "Python: test training",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/jan/BA/code/lottery_ticket_hypothesis/train.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["--output_dir", "/home/jan/BA/code/lottery_ticket_hypothesis/train_output"]
+        },
+        {
+            "name": "Python: test training v2",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/jan/BA/code/lottery_ticket_hypothesis/mnist_fc/runners/train.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            //"args": ["--outputdir", "/home/jan/BA/code/lottery_ticket_hypothesis/train_output"]
+        }
+    ]
+}
