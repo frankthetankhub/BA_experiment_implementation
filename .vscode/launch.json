@@ -5,39 +5,50 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Download data",
+            "name": "Python: lth-pytorch, test fashion mnist",
             "type": "python",
             "request": "launch",
-            "program": "/home/jan/BA/code/lottery_ticket_hypothesis/mnist_fc/download_data.py",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "Python: lth-pytorch, fashion mnist",
-            "type": "python",
-            "request": "launch",
-            "program": "/home/jan/BA/code/lottery_ticket_hypothesis/train.py",
+            "program": "/home/jan/BA/code/lottery-Ticket-Hypothesis-in-Pytorch/main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["--output_dir", "/home/jan/BA/code/lottery-Ticket-Hypothesis-in-Pytorch/main.py"]
+            "args": ["--dataset", "fashionmnist", "--arch_type", "fc1"]
         },
         {
-            "name": "Python: test training",
+            "name": "Python: lth-pytorch, test mnist",
             "type": "python",
             "request": "launch",
-            "program": "/home/jan/BA/code/lottery_ticket_hypothesis/train.py",
+            "program": "/home/jan/BA/code/lottery-Ticket-Hypothesis-in-Pytorch/main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["--output_dir", "/home/jan/BA/code/lottery_ticket_hypothesis/train_output"]
+            "args": ["--dataset", "mnist", "--arch_type", "fc1"]
         },
         {
-            "name": "Python: test training v2",
+            "name": "lth, mnist fc, few epochs for prune",
             "type": "python",
             "request": "launch",
-            "program": "/home/jan/BA/code/lottery_ticket_hypothesis/mnist_fc/runners/train.py",
+            "program": "/home/jan/BA/code/lottery-Ticket-Hypothesis-in-Pytorch/main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            //"args": ["--outputdir", "/home/jan/BA/code/lottery_ticket_hypothesis/train_output"]
-        }
+            "args": ["--dataset", "mnist", "--arch_type", "fc1", "--end_iter", "10", "--prune_iterations", "10"]
+        },
+        {
+            "name": "lth, mnist fc, 15% 18 iterations prunen",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/jan/BA/code/lottery-Ticket-Hypothesis-in-Pytorch/main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["--dataset", "mnist", "--arch_type", "fc1", "--end_iter", "15", "--prune_iterations", "18","--prune_percent","15"]
+        },
+        {
+            "name": "Python: lth-pytorch, test cifar10, densenet",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/jan/BA/code/lottery-Ticket-Hypothesis-in-Pytorch/main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["--dataset", "cifar10", "--arch_type", "densenet121"]
+        },
+       
     ]
 }

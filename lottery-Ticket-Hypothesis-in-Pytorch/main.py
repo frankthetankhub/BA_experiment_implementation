@@ -18,6 +18,7 @@ import torchvision.utils as vutils
 import seaborn as sns
 import torch.nn.init as init
 import pickle
+from datetime import datetime
 
 # Custom Libraries
 import utils
@@ -88,9 +89,10 @@ def main(args, ITE=0):
     model.apply(weight_init)
 
     # Copying and Saving Initial State
+    start_of_trial = datetime.datetime.now().strftime("%d_%m_%H%M")
     initial_state_dict = copy.deepcopy(model.state_dict())
-    utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/")
-    torch.save(model, f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/initial_state_dict_{args.prune_type}.pth.tar")
+    utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_trial}/")
+    torch.save(model, f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_trial}/initial_state_dict_{args.prune_type}.pth.tar")
 
     # Making Initial Mask
     make_mask(model)
@@ -105,7 +107,7 @@ def main(args, ITE=0):
 
     # Pruning
     # NOTE First Pruning Iteration is of No Compression
-    bestacc = 0.0
+    bestacc = 0.0 #??
     best_accuracy = 0
     ITERATION = args.prune_iterations
     comp = np.zeros(ITERATION,float)
@@ -114,7 +116,7 @@ def main(args, ITE=0):
     all_loss = np.zeros(args.end_iter,float)
     all_accuracy = np.zeros(args.end_iter,float)
 
-
+    
     for _ite in range(args.start_iter, ITERATION):
         if not _ite == 0:
             prune_by_percentile(args.prune_percent, resample=resample, reinit=reinit)
@@ -148,10 +150,11 @@ def main(args, ITE=0):
         print(f"\n--- Pruning Level [{ITE}:{_ite}/{ITERATION}]: ---")
 
         # Print the table of Nonzeros in each layer
+        # print_nonzeros returns a scalar indicating pruning percent i.e. how many percent of weights left
         comp1 = utils.print_nonzeros(model)
         comp[_ite] = comp1
         pbar = tqdm(range(args.end_iter))
-
+        early_stopping = 0
         for iter_ in pbar:
 
             # Frequency for Testing
@@ -163,6 +166,12 @@ def main(args, ITE=0):
                     best_accuracy = accuracy
                     utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/")
                     torch.save(model,f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{_ite}_model_{args.prune_type}.pth.tar")
+                    early_stopping = 0
+                else:
+                    early_stopping +=1
+                    if early_stopping > 4:
+                        early_stopping=0
+                        break
 
             # Training
             loss = train(model, train_loader, optimizer, criterion)
@@ -174,7 +183,8 @@ def main(args, ITE=0):
                 pbar.set_description(
                     f'Train Epoch: {iter_}/{args.end_iter} Loss: {loss:.6f} Accuracy: {accuracy:.2f}% Best Accuracy: {best_accuracy:.2f}%')       
 
-        writer.add_scalar('Accuracy/test', best_accuracy, comp1)
+            #writer.add_scalar("accuracy per epoch", )
+        writer.add_scalar('best accuracy reached in run', best_accuracy, comp1) #'Accuracy/test'
         bestacc[_ite]=best_accuracy
 
         # Plotting Loss (Training), Accuracy (Testing), Iteration Curve
@@ -187,18 +197,18 @@ def main(args, ITE=0):
         plt.ylabel("Loss and Accuracy") 
         plt.legend() 
         plt.grid(color="gray") 
-        utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/")
-        plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_LossVsAccuracy_{comp1}.png", dpi=1200) 
+        utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/")
+        plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/{args.prune_type}_LossVsAccuracy_{comp1}.png", dpi=1200) 
         plt.close()
 
         # Dump Plot values
-        utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/")
-        all_loss.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_all_loss_{comp1}.dat")
-        all_accuracy.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_all_accuracy_{comp1}.dat")
+        utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/")
+        all_loss.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/{args.prune_type}_all_loss_{comp1}.dat")
+        all_accuracy.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/{args.prune_type}_all_accuracy_{comp1}.dat")
         
         # Dumping mask
-        utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/")
-        with open(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_mask_{comp1}.pkl", 'wb') as fp:
+        utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/")
+        with open(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/{args.prune_type}_mask_{comp1}.pkl", 'wb') as fp:
             pickle.dump(mask, fp)
         
         # Making variables into 0
@@ -207,9 +217,9 @@ def main(args, ITE=0):
         all_accuracy = np.zeros(args.end_iter,float)
 
     # Dumping Values for Plotting
-    utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/")
-    comp.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_compression.dat")
-    bestacc.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_bestaccuracy.dat")
+    utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/")
+    comp.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/{args.prune_type}_compression.dat")
+    bestacc.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/{args.prune_type}_bestaccuracy.dat")
 
     # Plotting
     a = np.arange(args.prune_iterations)
@@ -221,8 +231,8 @@ def main(args, ITE=0):
     plt.ylim(0,100)
     plt.legend() 
     plt.grid(color="gray") 
-    utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/")
-    plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_AccuracyVsWeights.png", dpi=1200) 
+    utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/")
+    plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/{args.prune_type}_AccuracyVsWeights.png", dpi=1200) 
     plt.close()                    
    
 # Function for Training
@@ -408,8 +418,9 @@ if __name__=="__main__":
     parser.add_argument("--gpu", default="0", type=str)
     parser.add_argument("--dataset", default="mnist", type=str, help="mnist | cifar10 | fashionmnist | cifar100")
     parser.add_argument("--arch_type", default="fc1", type=str, help="fc1 | lenet5 | alexnet | vgg16 | resnet18 | densenet121")
-    parser.add_argument("--prune_percent", default=10, type=int, help="Pruning percent")
-    parser.add_argument("--prune_iterations", default=35, type=int, help="Pruning iterations count")
+    parser.add_argument("--prune_percent", default=20, type=int, help="Pruning percent")
+    parser.add_argument("--prune_iterations", default=24, type=int, help="Pruning iterations count")
+    parser.add_argument("--trial_iterations", default=1, type=int, help="How many Runs (train and iteratively prune a single network) to perform")
 
     
     args = parser.parse_args()
@@ -421,7 +432,8 @@ if __name__=="__main__":
     
     #FIXME resample
     resample = False
+    trial_iterations = args.trial_iterations
 
     # Looping Entire process
     #for i in range(0, 5):
-    main(args, ITE=1)
+    main(args, ITE=trial_iterations)
