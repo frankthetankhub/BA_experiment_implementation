@@ -89,7 +89,7 @@ def main(args, ITE=0):
         model.apply(weight_init)
 
         # Copying and Saving Initial State
-        start_of_trial = datetime.datetime.now().strftime("%d_%m_%H%M")
+        start_of_trial = datetime.now().strftime("%d_%m_%H_%M")
         initial_state_dict = copy.deepcopy(model.state_dict())
         utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_trial}/")
         torch.save(model, f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_trial}/initial_state_dict_{args.prune_type}.pth.tar")
@@ -165,7 +165,7 @@ def main(args, ITE=0):
                     if accuracy > best_accuracy:
                         best_accuracy = accuracy
                         utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/")
-                        torch.save(model,f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{_ite}_model_{args.prune_type}.pth.tar")
+                        torch.save(model,f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_trial}/{_ite}_model_{args.prune_type}.pth.tar")
                         early_stopping = 0
                     else:
                         early_stopping +=1
