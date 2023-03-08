@@ -19,6 +19,7 @@ import seaborn as sns
 import torch.nn.init as init
 import pickle
 from datetime import datetime
+from time import perf_counter
 
 # Custom Libraries
 import utils
@@ -33,6 +34,8 @@ sns.set_style('darkgrid')
 def main(args, ITE=0):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     reinit = True if args.prune_type=="reinit" else False
+    min_acc_delta = args.min_acc_delta
+    patience = args.patience
 
     # Data Loader
     transform=transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.1307,), (0.3081,))])
@@ -118,8 +121,12 @@ def main(args, ITE=0):
 
         
         for _ite in range(args.start_iter, ITERATION):
+            start_of_pruning_iteration = perf_counter()
             if not _ite == 0:
+                start_of_pruning = perf_counter()
                 prune_by_percentile(args.prune_percent, resample=resample, reinit=reinit)
+                time_for_pruning = perf_counter() - start_of_pruning
+                writer.add_scalar("Time taken for Pruning", time_for_pruning, _ite)
                 if reinit:
                     model.apply(weight_init)
                     #if args.arch_type == "fc1":
@@ -162,19 +169,24 @@ def main(args, ITE=0):
                     accuracy = test(model, test_loader, criterion)
 
                     # Save Weights
-                    if accuracy > best_accuracy:
+                    accuracy_diff = accuracy - best_accuracy 
+                    if accuracy_diff > 0:
                         best_accuracy = accuracy
                         utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/")
                         torch.save(model,f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_trial}/{_ite}_model_{args.prune_type}.pth.tar")
-                        early_stopping = 0
+                        if accuracy_diff > min_acc_delta:
+                            early_stopping = 0
                     else:
                         early_stopping +=1
-                        if early_stopping > 4:
+                        if early_stopping > patience:
                             early_stopping=0
                             break
 
                 # Training
+                before_training = perf_counter()
                 loss = train(model, train_loader, optimizer, criterion)
+                training_time_per_epoch = perf_counter() - before_training
+                writer.add_scalar("training time per Training Epoch", training_time_per_epoch, iter_)
                 all_loss[iter_] = loss
                 all_accuracy[iter_] = accuracy
                 
@@ -184,7 +196,9 @@ def main(args, ITE=0):
                         f'Train Epoch: {iter_}/{args.end_iter} Loss: {loss:.6f} Accuracy: {accuracy:.2f}% Best Accuracy: {best_accuracy:.2f}%')       
 
                 #writer.add_scalar("accuracy per epoch", )
+            time_per_pruning_iteration = perf_counter - start_of_pruning_iteration
             writer.add_scalar('best accuracy reached in run', best_accuracy, comp1) #'Accuracy/test'
+            writer.add_scalar("Time per Pruning Iteration", time_per_pruning_iteration, _ite)
             bestacc[_ite]=best_accuracy
 
             # Plotting Loss (Training), Accuracy (Testing), Iteration Curve
@@ -421,8 +435,12 @@ if __name__=="__main__":
     parser.add_argument("--prune_percent", default=20, type=int, help="Pruning percent")
     parser.add_argument("--prune_iterations", default=24, type=int, help="Pruning iterations count")
     parser.add_argument("--trial_iterations", default=1, type=int, help="How many Runs (train and iteratively prune a single network) to perform")
+    parser.add_argument("--min_acc_delta", default=0.3, type=float, help="How big needs the accuracy gain be to disable early-stopping counter")
+    parser.add_argument("--patience", default=2, type=int, help="How many times acc < best_acc befor early-stopping Trainin. Defaults to allowing lower validation acc 2 times before stopping.")
+
 
     
+
     args = parser.parse_args()
 
 
