@@ -23,11 +23,13 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Python - parallel training (setMPI_model)",
+            "name": "SET:parallel training, cifar10",
             "type": "python",
             "request": "launch",
             "program": "parallel_training.py",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "args": ["--monitor", "True", "--log-file","--epochs", "10", "dataset", "cifar10"]
+
         }
     ]
 }
