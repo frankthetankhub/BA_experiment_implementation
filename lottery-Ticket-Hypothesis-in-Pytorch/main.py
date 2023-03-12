@@ -30,12 +30,19 @@ writer = SummaryWriter()
 # Plotting Style
 sns.set_style('darkgrid')
 
+def set_seed(seed):
+    rng_torch = torch.random.manual_seed(10)
+    rng_np = np.random.default_rng(10)
+    return
+
 # Main
 def main(args, ITE=0):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     reinit = True if args.prune_type=="reinit" else False
     min_acc_delta = args.min_acc_delta
     patience = args.patience
+
+    set_seed(args.seed)
 
     # Data Loader
     transform=transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.1307,), (0.3081,))])
@@ -437,6 +444,7 @@ if __name__=="__main__":
     parser.add_argument("--trial_iterations", default=1, type=int, help="How many Runs (train and iteratively prune a single network) to perform")
     parser.add_argument("--min_acc_delta", default=0.3, type=float, help="How big needs the accuracy gain be to disable early-stopping counter")
     parser.add_argument("--patience", default=2, type=int, help="How many times acc < best_acc befor early-stopping Trainin. Defaults to allowing lower validation acc 2 times before stopping.")
+    parser.add_argument("--seed", default=1, type=int, help="The seed to use for random pruning.")
 
 
     
