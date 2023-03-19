@@ -87,6 +87,9 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', default='fashionmnist', help='Specify dataset. One of "cifar10", "fashionmnist",'
                                                              '"madelon",  or "mnist"')
 
+    #added by me
+    parser.add_argument('--seed', type=int, default=0, help='The Seed to use for RNG, to keep results reproducible')
+
     args = parser.parse_args()
 
     # Default weight initialization technique
