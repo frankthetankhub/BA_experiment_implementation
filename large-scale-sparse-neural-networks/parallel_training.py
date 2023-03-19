@@ -92,6 +92,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    #include seeding
+    
+
     # Default weight initialization technique
     weight_init = 'xavier'
     prune = args.prune
