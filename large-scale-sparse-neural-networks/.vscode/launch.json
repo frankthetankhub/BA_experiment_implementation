@@ -23,12 +23,12 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "SET:parallel training, cifar10",
+            "name": "SET:parallel training, fashionmnist",
             "type": "python",
             "request": "launch",
             "program": "parallel_training.py",
             "console": "integratedTerminal",
-            "args": ["--monitor", "True", "--log-file","--epochs", "10", "dataset", "cifar10"]
+            "args": ["--monitor", "True", "--log-file","--epochs", "10",] //"dataset", "cifar10"
 
         }
     ]
