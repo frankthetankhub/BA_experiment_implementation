@@ -67,6 +67,15 @@
             "justMyCode": true,
             "args": ["--dataset", "cifar10", "--arch_type", "fc1", "--end_iter", "15", "--prune_iterations", "24","--prune_percent","20","--trial_iterations", "5"]
         },
+        {
+            "name": "SET:parallel training, fashionmnist",
+            "type": "python",
+            "request": "launch",
+            "program": "large-scale-sparse-neural-networks/parallel_training.py",
+            "console": "integratedTerminal",
+            "args": ["--monitor", "True", "--log-file","--epochs", "10", "--seed", "0"]
+
+        },
        
     ]
 }

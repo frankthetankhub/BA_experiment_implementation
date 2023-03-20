@@ -23,6 +23,15 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "SET:parallel training, fashionmnist",
+            "type": "python",
+            "request": "launch",
+            "program": "parallel_training.py",
+            "console": "integratedTerminal",
+            "args": ["--monitor", "True", "--log-file","--epochs", "10", "--seed", "0"]
+
+        },
+        {
             "name": "SET:parallel training, cifar10",
             "type": "python",
             "request": "launch",
