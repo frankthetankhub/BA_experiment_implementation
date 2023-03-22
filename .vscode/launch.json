@@ -71,7 +71,7 @@
             "name": "SET:parallel training, fashionmnist",
             "type": "python",
             "request": "launch",
-            "program": "large-scale-sparse-neural-networks/parallel_training.py",
+            "program": "/home/jan/BA/code/large-scale-sparse-neural-networks/parallel_training.py",
             "console": "integratedTerminal",
             "args": ["--monitor", "True", "--log-file","--epochs", "10", "--seed", "0"]
 
