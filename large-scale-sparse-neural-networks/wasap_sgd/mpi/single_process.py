@@ -29,7 +29,7 @@ class MPISingleWorker(MPIWorker):
             if self.monitor:
                 self.monitor.start_monitor()
 
-            for j in range(self.data.x_train.shape[0] // self.data.batch_size):
+            for j in range(self.data.x_train.shape[0] // self.data.batch_size):#wichtige stelle hier startet der trainingsprocess für single_process bzw parallel training
                 start_pos = j * self.data.batch_size
                 end_pos = (j + 1) * self.data.batch_size
                 batch = self.data.x_train[start_pos:end_pos], self.data.y_train[start_pos:end_pos]
@@ -63,9 +63,9 @@ class MPISingleWorker(MPIWorker):
                 break
 
             weights.append(self.model.get_weights()['w'])
-            biases.append(self.model.get_weights()['b'])
+            biases.append(self.model.get_weights()['b']) #wichtige stelle da hier potentiell das saven von weights etc angebracht ist
             if epoch < self.num_epochs - 1:  # do not change connectivity pattern after the last epoch
-                self.model.weight_evolution(epoch)
+                self.model.weight_evolution(epoch) #wichtige stelle da hier weight evolution durchgeführt wird
                 self.weights = self.model.get_weights()
 
         logging.info("Signing off")
