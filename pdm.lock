@@ -10,12 +10,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "future"
-version = "0.18.3"
-requires_python = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
-summary = "Clean single-source support for Python 3 and 2"
-
-[[package]]
 name = "kiwisolver"
 version = "1.1.0"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
@@ -136,7 +130,6 @@ name = "torch"
 version = "1.2.0"
 summary = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
 dependencies = [
-    "future",
     "numpy",
 ]
 
@@ -159,15 +152,12 @@ summary = "Fast, Extensible Progress Meter"
 
 [metadata]
 lock_version = "4.1"
-content_hash = "sha256:a6fd418eafd8a6ccd3df206fc1118befc4fdceb97c05920702ead8ea491fcda1"
+content_hash = "sha256:a716d666d426304e9d57ba6f30e8393b7e545f32e2e2c10bd371778eb1e079b7"
 
 [metadata.files]
 "cycler 0.10.0" = [
     {url = "https://files.pythonhosted.org/packages/c2/4b/137dea450d6e1e3d474e1d873cd1d4f7d3beed7e0dc973b06e8e10d32488/cycler-0.10.0.tar.gz", hash = "sha256:cd7b2d1018258d7247a71425e9f26463dfb444d411c39569972f4ce586b0c9d8"},
     {url = "https://files.pythonhosted.org/packages/f7/d2/e07d3ebb2bd7af696440ce7e754c59dd546ffe1bbe732c8ab68b9c834e61/cycler-0.10.0-py2.py3-none-any.whl", hash = "sha256:1d8a5ae1ff6c5cf9b93e8811e581232ad8920aeec647c37316ceac982b08cb2d"},
-]
-"future 0.18.3" = [
-    {url = "https://files.pythonhosted.org/packages/8f/2e/cf6accf7415237d6faeeebdc7832023c90e0282aa16fd3263db0eb4715ec/future-0.18.3.tar.gz", hash = "sha256:34a17436ed1e96697a86f9de3d15a3b0be01d8bc8de9c1dffd59fb8234ed5307"},
 ]
 "kiwisolver 1.1.0" = [
     {url = "https://files.pythonhosted.org/packages/04/73/69c86f3c617ea80d25f4ba7af3e5ce9bad72a4d024c2e7dc94524f8cbefa/kiwisolver-1.1.0-cp34-cp34m-manylinux1_x86_64.whl", hash = "sha256:8aa7009437640beb2768bfd06da049bad0df85f47ff18426261acecd1cf00897"},
