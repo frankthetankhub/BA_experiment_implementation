@@ -11,6 +11,8 @@ from wasap_sgd.train.data import Data
 from wasap_sgd.train.model import SETMPIModel
 from wasap_sgd.logger import initialize_logger
 
+from datetime import datetime
+
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -40,6 +42,12 @@ def shared_partitions(n, num_workers, batch_size):
         data[w] = dinds[w * batch_size * worker_size: (w+1) * batch_size * worker_size]
 
     return data
+
+# def set_seed(seed):
+#     #rng_torch = torch.random.manual_seed(10)
+#     #random.seed(10)
+#     rng_np = np.random.default_rng(10)
+#     return
 
 
 if __name__ == '__main__':
@@ -87,7 +95,12 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', default='fashionmnist', help='Specify dataset. One of "cifar10", "fashionmnist",'
                                                              '"madelon",  or "mnist"')
 
+    #added by me
+    #parser.add_argument('--seed', type=int, default=0, help='The Seed to use for RNG, to keep results reproducible')
+
     args = parser.parse_args()
+
+    
 
     # Default weight initialization technique
     weight_init = 'xavier'
@@ -151,7 +164,8 @@ if __name__ == '__main__':
         learning_rate = learning_rate * (num_workers)
 
     # Initialize logger
-    base_file_name = "results/set_mlp_parallel_" + str(args.dataset)+"_" + str(args.epochs) + "_epochs_e" + \
+    start_of_trial = datetime.now().strftime("%d_%m_%H_%M")
+    base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+"/" + start_of_trial + "/" + str(args.epochs) + "_epochs_e" + \
                      str(epsilon) + "_rand" + str(args.seed) + "_num_workers_" + str(num_workers)
     log_file = base_file_name + "_logs_execution.txt"
 
