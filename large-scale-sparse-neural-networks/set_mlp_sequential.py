@@ -564,7 +564,7 @@ if __name__ == "__main__":
     sum_training_time = 0
     runs = 1
 
-    for i in range(runs):
+    for seed in range(runs):
 
         # load data
         no_training_samples = 60000  # max 60000 for Fashion MNIST
@@ -582,8 +582,12 @@ if __name__ == "__main__":
         momentum = 0.9
         weight_decay = 0.0002
 
-        np.random.seed(i)
+        np.random.seed(seed)
 
+        start_of_trial = datetime.now().strftime("%d_%m_%H_%M")
+        base_file_name = "results/set_mlp_parallel/" + start_of_trial + "/" +  str(no_training_samples) + "_training_samples_" +str(no_training_epochs) + "_epochs_e" + \
+                     str(epsilon) + "_rand" + str(seed)
+        
         # create SET-MLP (MLP with adaptive sparse connectivity trained with Sparse Evolutionary Training)
         set_mlp = SET_MLP((x_train.shape[1], no_hidden_neurons_layer, no_hidden_neurons_layer, no_hidden_neurons_layer, y_train.shape[1]),
                           (AlternatedLeftReLU(-0.6), AlternatedLeftReLU(0.6), AlternatedLeftReLU(-0.6), Softmax), epsilon=epsilon)
@@ -592,7 +596,7 @@ if __name__ == "__main__":
         # train SET-MLP
         set_mlp.fit(x_train, y_train, x_test, y_test, loss=CrossEntropy, epochs=no_training_epochs, batch_size=batch_size, learning_rate=learning_rate,
                     momentum=momentum, weight_decay=weight_decay, zeta=zeta, dropoutrate=dropout_rate, testing=True,
-                    save_filename="results/set_mlp_sequential_" + str(no_training_samples) + "_training_samples_e" + str(epsilon) + "_rand" + str(i), monitor=True)
+                    save_filename=base_file_name, monitor=True)
 
         step_time = time.time() - start_time
         print("\nTotal execution time: ", step_time)
