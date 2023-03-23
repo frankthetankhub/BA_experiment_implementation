@@ -84,7 +84,7 @@ if __name__ == '__main__':
     parser.add_argument('--zeta', type=float, default=0.3,
                         help='It gives the percentage of unimportant connections which are removed and replaced with '
                              'random ones after every epoch(in [0..1])')
-    parser.add_argument('--n-neurons', type=int, default=3000, help='Number of neurons in the hidden layer')
+    parser.add_argument('--n-neurons', type=int, default=3000, help='Number of neurons in the hidden layer, currently not used but to be implemented')
     parser.add_argument('--prune', default=True, help='Perform Importance Pruning', action='store_true')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=10,
@@ -94,9 +94,6 @@ if __name__ == '__main__':
     parser.add_argument('--augmentation', default=True, help='Data augmentation', action='store_true')
     parser.add_argument('--dataset', default='fashionmnist', help='Specify dataset. One of "cifar10", "fashionmnist",'
                                                              '"madelon",  or "mnist"')
-
-    #added by me
-    #parser.add_argument('--seed', type=int, default=0, help='The Seed to use for RNG, to keep results reproducible')
 
     args = parser.parse_args()
 

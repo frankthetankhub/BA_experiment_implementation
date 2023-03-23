@@ -19,16 +19,25 @@
             "name": "Python - set_mlp_sequential",
             "type": "python",
             "request": "launch",
-            "program": "set_mlp_sequential.py",
+            "program": "/home/jan/BA/code/large-scale-sparse-neural-networks/set_mlp_sequential.py",
             "console": "integratedTerminal"
         },
         {
             "name": "SET:parallel training, fashionmnist",
             "type": "python",
             "request": "launch",
-            "program": "parallel_training.py",
+            "program": "/home/jan/BA/code/large-scale-sparse-neural-networks/parallel_training.py",
             "console": "integratedTerminal",
             "args": ["--monitor", "--log-file","results/logfile","--epochs", "10",] //"dataset", "cifar10" "True", 
+
+        },
+        {
+            "name": "SET:parallel training, fashionmnist, 4 processes, 1 worker",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/jan/BA/code/large-scale-sparse-neural-networks/parallel_training.py",
+            "console": "integratedTerminal",
+            "args": ["--monitor", "--log-file","results/logfile","--epochs", "10","--processes","4"] //"dataset", "cifar10" "True", 
 
         }
     ]
