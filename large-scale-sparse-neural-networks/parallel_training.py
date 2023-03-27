@@ -43,11 +43,6 @@ def shared_partitions(n, num_workers, batch_size):
 
     return data
 
-# def set_seed(seed):
-#     #rng_torch = torch.random.manual_seed(10)
-#     #random.seed(10)
-#     rng_np = np.random.default_rng(10)
-#     return
 
 
 if __name__ == '__main__':
@@ -69,7 +64,7 @@ if __name__ == '__main__':
 
     # logging configuration
     parser.add_argument('--log-file', default=None, dest='log_file',
-                        help='log file to write, in additon to output stream')
+                        help='log file to write, in additon to output stream; currently does nothing')
     parser.add_argument('--log-level', default='info', dest='log_level', help='log level (debug, info, warn, error)')
 
     # Model configuration
@@ -94,6 +89,9 @@ if __name__ == '__main__':
     parser.add_argument('--augmentation', default=True, help='Data augmentation', action='store_true')
     parser.add_argument('--dataset', default='fashionmnist', help='Specify dataset. One of "cifar10", "fashionmnist",'
                                                              '"madelon",  or "mnist"')
+
+    #added by me
+    #parser.add_argument('--seed', type=int, default=0, help='The Seed to use for RNG, to keep results reproducible')
 
     args = parser.parse_args()
 

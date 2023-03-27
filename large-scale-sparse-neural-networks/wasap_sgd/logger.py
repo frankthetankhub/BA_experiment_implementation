@@ -2,6 +2,7 @@ from mpi4py import MPI
 import time
 import logging
 from os.path import abspath
+from pathlib import Path
 
 level_map = {
     'debug': logging.DEBUG,
@@ -55,6 +56,17 @@ class MPIFileHandler(logging.FileHandler):
             logging.StreamHandler.__init__(self, self._open())
 
     def _open(self):
+        folder = self.baseFilename.rsplit('/',1)[0]
+        folder_path = Path(folder)
+        rank = self.comm.Get_rank()
+        print(rank)
+        if not folder_path.exists():
+            if rank ==0:
+                Path(folder).mkdir(parents=True, exist_ok=False)
+            else:
+                print(f"this process is not rank 0 but instead {rank}")
+            # with open(self.baseFilename, "a") as file:
+            #             file.write("") #wichtige stell TODO
         stream = MPI.File.Open(self.comm, self.baseFilename, self.mode)
         stream.Set_atomicity(True)
         return stream
