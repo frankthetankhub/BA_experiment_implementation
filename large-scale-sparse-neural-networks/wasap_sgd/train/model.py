@@ -119,8 +119,6 @@ class SETMPIModel(object):
         :config activations: (tpl/ list) Activations functions.
         """
         self.n_layers = len(dimensions)
-
-        self.n_layers = len(dimensions)
         self.learning_rate = config['lr']
         self.momentum = config['momentum']
         self.epochs = config['n_epochs']

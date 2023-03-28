@@ -84,7 +84,7 @@ if __name__ == '__main__':
     parser.add_argument('--zeta', type=float, default=0.3,
                         help='It gives the percentage of unimportant connections which are removed and replaced with '
                              'random ones after every epoch(in [0..1])')
-    parser.add_argument('--n-neurons', type=int, default=3000, help='Number of neurons in the hidden layer')
+    parser.add_argument('--n-neurons', type=int, default=3000,action="append", help='Number of neurons in the hidden layer')
     parser.add_argument('--prune', default=True, help='Perform Importance Pruning', action='store_true')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=10,
@@ -125,7 +125,10 @@ if __name__ == '__main__':
     # Model architecture
     if args.dataset == 'fashionmnist' or args.dataset == 'mnist':
         # Model architecture mnist
-        dimensions = (784, 1000, 1000, 1000, 10)
+        if (not n_hidden_neurons) or len(n_hidden_neurons)!= 5 or n_hidden_neurons[0]!=784 or n_hidden_neurons[-1]!=10:
+            dimensions = (784, 1000, 1000, 1000, 10)
+        else:
+            dimensions = n_hidden_neurons
         loss = 'cross_entropy'
         weight_init = 'he_uniform'
         activations = (AlternatedLeftReLU(-0.6), AlternatedLeftReLU(0.6), AlternatedLeftReLU(-0.6), Softmax)
