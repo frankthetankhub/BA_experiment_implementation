@@ -5,6 +5,24 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: lth-pytorch,fc fashion mnist, cluster",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/jan/BA/code/lottery-Ticket-Hypothesis-in-Pytorch/main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["--dataset", "fashionmnist", "--arch_type", "fc1", "--end_iter", "25", "--prune_iterations", "24","--prune_percent","20","--trial_iterations", "2", "--patience", "4", ]
+        },
+        {
+            "name": "Python: lth-pytorch,fc cifar10, cluster",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/jan/BA/code/lottery-Ticket-Hypothesis-in-Pytorch/main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["--dataset", "cifar10", "--arch_type", "fc1", "--end_iter", "25", "--prune_iterations", "24","--prune_percent","20","--trial_iterations", "2", "--patience", "4",]
+        },/////////////////////////////////////       
+        {
             "name": "Python: lth-pytorch, test fashion mnist",
             "type": "python",
             "request": "launch",

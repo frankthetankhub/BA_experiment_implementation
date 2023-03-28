@@ -136,21 +136,6 @@ def main(args, ITE=0):
                 writer.add_scalar("Time taken for Pruning", time_for_pruning, _ite)
                 if reinit:
                     model.apply(weight_init)
-                    #if args.arch_type == "fc1":
-                    #    model = fc1.fc1().to(device)
-                    #elif args.arch_type == "lenet5":
-                    #    model = LeNet5.LeNet5().to(device)
-                    #elif args.arch_type == "alexnet":
-                    #    model = AlexNet.AlexNet().to(device)
-                    #elif args.arch_type == "vgg16":
-                    #    model = vgg.vgg16().to(device)  
-                    #elif args.arch_type == "resnet18":
-                    #    model = resnet.resnet18().to(device)   
-                    #elif args.arch_type == "densenet121":
-                    #    model = densenet.densenet121().to(device)   
-                    #else:
-                    #    print("\nWrong Model choice\n")
-                    #    exit()
                     step = 0
                     for name, param in model.named_parameters():
                         if 'weight' in name:
@@ -203,7 +188,7 @@ def main(args, ITE=0):
                         f'Train Epoch: {iter_}/{args.end_iter} Loss: {loss:.6f} Accuracy: {accuracy:.2f}% Best Accuracy: {best_accuracy:.2f}%')       
 
                 #writer.add_scalar("accuracy per epoch", )
-            time_per_pruning_iteration = perf_counter - start_of_pruning_iteration
+            time_per_pruning_iteration = perf_counter() - start_of_pruning_iteration
             writer.add_scalar('best accuracy reached in run', best_accuracy, comp1) #'Accuracy/test'
             writer.add_scalar("Time per Pruning Iteration", time_per_pruning_iteration, _ite)
             bestacc[_ite]=best_accuracy
