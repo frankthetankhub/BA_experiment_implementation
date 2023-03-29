@@ -1,4 +1,4 @@
 #!/bin/bash
+cluster_cmd="qsub -v -b -cwd -l mem=8G,cuda=1 ./run.sh" 
 
-
-for seed in 1 2 3 4 5; do ./run.sh $seed; done
+for seed in 1 2; do $cluster_cmd $seed; done

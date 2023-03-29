@@ -17,9 +17,10 @@ python_loc="/home/student/j/jankettler/python/Python-3.7.16/python"
 #-v PATH --> die neue umgebung übernimmt die PATH variable aus dem scope wo wir gerade sind(venv) 
 #-cwd: current working directory; or wd=path/to/directory um working directory zu setzen
 
-cmd="qsub -v -b -cwd -l mem=8G,cuda=1 mpiexec -n 6 $python_loc $location"
+
+python_cmd="mpiexec -n 6 $python_loc $location"
 
 #for SEED in 1 2 3 4 5; do echo $cmd $ARGS --seed $SEED; done
 
 echo "First argument passed should be seed. Its value is: $1"
-echo $cmd $ARGS --seed $1
+echo $python_cmd $ARGS --seed $1
