@@ -23,4 +23,4 @@ python_cmd="mpiexec -n 6 $python_loc $location"
 #for SEED in 1 2 3 4 5; do echo $cmd $ARGS --seed $SEED; done
 
 echo "First argument passed should be seed. Its value is: $1"
-$python_cmd $ARGS --seed $1
+mpiexec -n 4 /usr/bin/python3.7 parallel_training.py $ARGS --seed $1
