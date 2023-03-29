@@ -20,4 +20,6 @@ python_loc="/home/student/j/jankettler/python/Python-3.7.16/python"
 cmd="qsub -v -b -cwd -l mem=8G,cuda=1 mpiexec -n 6 $python_loc $location"
 
 #for SEED in 1 2 3 4 5; do echo $cmd $ARGS --seed $SEED; done
-$cmd $ARGS --seed 1
+
+echo "First argument passed should be seed. Its value is: $1"
+echo $cmd $ARGS --seed $1
