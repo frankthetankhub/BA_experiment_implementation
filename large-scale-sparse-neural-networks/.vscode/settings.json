@@ -1,5 +1,6 @@
 
 {
     "python.autoComplete.extraPaths": ["__pypackages__/3.7/lib"],
-    "python.analysis.extraPaths": ["__pypackages__/3.7/lib"]
+    "python.analysis.extraPaths": ["__pypackages__/3.7/lib"],
+    "editor.fontSize": 14,
 }
