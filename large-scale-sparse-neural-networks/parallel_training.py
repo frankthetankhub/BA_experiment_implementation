@@ -43,10 +43,6 @@ def shared_partitions(n, num_workers, batch_size):
 
     return data
 
-<<<<<<< HEAD
-=======
-
->>>>>>> large_scale
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -82,11 +78,7 @@ if __name__ == '__main__':
     parser.add_argument('--zeta', type=float, default=0.3,
                         help='It gives the percentage of unimportant connections which are removed and replaced with '
                              'random ones after every epoch(in [0..1])')
-<<<<<<< HEAD
     parser.add_argument('--n-neurons', type=int, default=None,action="append", help='Number of neurons in the hidden layer')
-=======
-    parser.add_argument('--n-neurons', type=int, default=3000, help='Number of neurons in the hidden layer, currently not used but to be implemented')
->>>>>>> large_scale
     parser.add_argument('--prune', default=True, help='Perform Importance Pruning', action='store_true')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=10,
