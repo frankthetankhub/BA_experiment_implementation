@@ -43,12 +43,6 @@ def shared_partitions(n, num_workers, batch_size):
 
     return data
 
-# def set_seed(seed):
-#     #rng_torch = torch.random.manual_seed(10)
-#     #random.seed(10)
-#     rng_np = np.random.default_rng(10)
-#     return
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -84,7 +78,7 @@ if __name__ == '__main__':
     parser.add_argument('--zeta', type=float, default=0.3,
                         help='It gives the percentage of unimportant connections which are removed and replaced with '
                              'random ones after every epoch(in [0..1])')
-    parser.add_argument('--n-neurons', type=int, default=3000,action="append", help='Number of neurons in the hidden layer')
+    parser.add_argument('--n-neurons', type=int, default=None,action="append", help='Number of neurons in the hidden layer')
     parser.add_argument('--prune', default=True, help='Perform Importance Pruning', action='store_true')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=10,
@@ -121,6 +115,7 @@ if __name__ == '__main__':
 
     # Comment this if you would like to use the full power of randomization. I use it to have repeatable results.
     np.random.seed(args.seed)
+    print(n_hidden_neurons)
 
     # Model architecture
     if args.dataset == 'fashionmnist' or args.dataset == 'mnist':
@@ -165,6 +160,9 @@ if __name__ == '__main__':
     # Scale up the learning rate for synchronous training
     if args.synchronous:
         learning_rate = learning_rate * (num_workers)
+
+    print(dimensions)
+
 
     # Initialize logger
     start_of_trial = datetime.now().strftime("%d_%m_%H_%M")
