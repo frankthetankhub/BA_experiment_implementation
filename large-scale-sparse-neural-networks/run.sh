@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ARGS="--monitor --epochs 10 --processes 4 --n-neurons 784 --n-neurons 1000 --n-neurons 1000 --n-neurons 1000 --n-neurons 10"
+ARGS="--monitor --epochs 10 --processes 2 --n-neurons 784 --n-neurons 1000 --n-neurons 1000 --n-neurons 1000 --n-neurons 10"
 location="/net/projects/scratch/summer/valid_until_31_January_2024/jankettler/Ba/large-scale-sparse-neural-networks/parallel_training.py"
 main_location="/home/jan/BA/code/large-scale-sparse-neural-networks/parallel_training.py"
 python_loc="/home/student/j/jankettler/python/Python-3.7.16/python"
@@ -18,7 +18,7 @@ python_loc="/home/student/j/jankettler/python/Python-3.7.16/python"
 #-cwd: current working directory; or wd=path/to/directory um working directory zu setzen
 
 
-python_cmd="mpiexec -n 4 --map-by socket --bind-to core --report-bindings $python_loc $location"
+python_cmd="/usr/bin/mpiexec -n 2 --map-by socket --bind-to core --report-bindings $python_loc $location"
 
 #for SEED in 1 2 3 4 5; do echo $cmd $ARGS --seed $SEED; done
 
@@ -27,4 +27,5 @@ echo "Check CPU with -lscpu-"
 lscpu
 echo "The following command is going to be executed:"
 echo "$python_cmd $ARGS --seed $1"
+which mpiexec
 $python_cmd $ARGS --seed $1
