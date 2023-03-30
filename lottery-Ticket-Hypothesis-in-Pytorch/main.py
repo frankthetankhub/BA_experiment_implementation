@@ -30,12 +30,19 @@ writer = SummaryWriter()
 # Plotting Style
 sns.set_style('darkgrid')
 
+def set_seed(seed):
+    rng_torch = torch.random.manual_seed(10)
+    rng_np = np.random.default_rng(10)
+    return
+
 # Main
 def main(args, ITE=0):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     reinit = True if args.prune_type=="reinit" else False
     min_acc_delta = args.min_acc_delta
     patience = args.patience
+
+    set_seed(args.seed)
 
     # Data Loader
     transform=transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.1307,), (0.3081,))])
@@ -129,21 +136,6 @@ def main(args, ITE=0):
                 writer.add_scalar("Time taken for Pruning", time_for_pruning, _ite)
                 if reinit:
                     model.apply(weight_init)
-                    #if args.arch_type == "fc1":
-                    #    model = fc1.fc1().to(device)
-                    #elif args.arch_type == "lenet5":
-                    #    model = LeNet5.LeNet5().to(device)
-                    #elif args.arch_type == "alexnet":
-                    #    model = AlexNet.AlexNet().to(device)
-                    #elif args.arch_type == "vgg16":
-                    #    model = vgg.vgg16().to(device)  
-                    #elif args.arch_type == "resnet18":
-                    #    model = resnet.resnet18().to(device)   
-                    #elif args.arch_type == "densenet121":
-                    #    model = densenet.densenet121().to(device)   
-                    #else:
-                    #    print("\nWrong Model choice\n")
-                    #    exit()
                     step = 0
                     for name, param in model.named_parameters():
                         if 'weight' in name:
@@ -196,7 +188,7 @@ def main(args, ITE=0):
                         f'Train Epoch: {iter_}/{args.end_iter} Loss: {loss:.6f} Accuracy: {accuracy:.2f}% Best Accuracy: {best_accuracy:.2f}%')       
 
                 #writer.add_scalar("accuracy per epoch", )
-            time_per_pruning_iteration = perf_counter - start_of_pruning_iteration
+            time_per_pruning_iteration = perf_counter() - start_of_pruning_iteration
             writer.add_scalar('best accuracy reached in run', best_accuracy, comp1) #'Accuracy/test'
             writer.add_scalar("Time per Pruning Iteration", time_per_pruning_iteration, _ite)
             bestacc[_ite]=best_accuracy
@@ -437,6 +429,7 @@ if __name__=="__main__":
     parser.add_argument("--trial_iterations", default=1, type=int, help="How many Runs (train and iteratively prune a single network) to perform")
     parser.add_argument("--min_acc_delta", default=0.3, type=float, help="How big needs the accuracy gain be to disable early-stopping counter")
     parser.add_argument("--patience", default=2, type=int, help="How many times acc < best_acc befor early-stopping Trainin. Defaults to allowing lower validation acc 2 times before stopping.")
+    parser.add_argument("--seed", default=1, type=int, help="The seed to use for random pruning.")
 
 
     
