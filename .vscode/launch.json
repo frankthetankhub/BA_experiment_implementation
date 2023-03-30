@@ -41,15 +41,6 @@
             "args": ["--dataset", "cifar10", "--arch_type", "densenet121", "--end_iter", "15", "--prune_iterations", "24","--prune_percent","20","--trial_iterations", "2"]
         },
         {
-            "name": "Python: lth-pytorch, test mnist",
-            "type": "python",
-            "request": "launch",
-            "program": "/home/jan/BA/code/lottery-Ticket-Hypothesis-in-Pytorch/main.py",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "args": ["--dataset", "mnist", "--arch_type", "fc1"]
-        },
-        {
             "name": "lth, mnist fc, few epochs for prune",
             "type": "python",
             "request": "launch",
@@ -66,15 +57,6 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": ["--dataset", "mnist", "--arch_type", "fc1", "--end_iter", "15", "--prune_iterations", "24","--prune_percent","20","--trial_iterations", "5"]
-        },
-        {
-            "name": "Python: lth-pytorch, test cifar10, densenet",
-            "type": "python",
-            "request": "launch",
-            "program": "/home/jan/BA/code/lottery-Ticket-Hypothesis-in-Pytorch/main.py",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "args": ["--dataset", "cifar10", "--arch_type", "densenet121"]
         },
         {
             "name": "Python: lth-pytorch, test cifar10, fc1",
