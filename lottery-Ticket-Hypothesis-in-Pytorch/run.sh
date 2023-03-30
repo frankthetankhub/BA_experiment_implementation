@@ -6,9 +6,9 @@ ARGS="--dataset fashionmnist --arch_type fc1 --end_iter 25 --prune_iterations 24
 
 ARGS_TEST="--dataset fashionmnist --arch_type fc1 --end_iter 1 --prune_iterations 1 --prune_percent 20 --trial_iterations 1 --patience 4"
 
-python_loc="/home/student/j/jankettler/.local/share/pdm/venvs/Ba-tgOD6Eqp-3.7/bin/python3.7"
+python_loc="/home/student/j/jankettler/.local/share/pdm/venvs/lottery-Ticket-Hypothesis-in-Pytorch-ER_pAaTh-3.7/bin/python"
 
-cluster_cmd="qsub -v -b -cwd -l mem=8G"
+cluster_cmd="qsub -b y -cwd -l mem=8G,cuda=1 -V"
 #-b
 #cuda=1 
 
@@ -21,4 +21,7 @@ which python3.7
 echo "working directory and content"
 pwd
 ls
+echo "setting LD_LIBRARY_PATH to /lib"
+export LD_LIBRARY_PATH="/lib/":$LD_LIBRARY_PATH
+echo $LD_LIBRARY_PATH
 $cluster_cmd $python_loc $MAIN $ARGS_TEST --seed 1
