@@ -6,10 +6,19 @@ ARGS="--dataset fashionmnist --arch_type fc1 --end_iter 25 --prune_iterations 24
 
 ARGS_TEST="--dataset fashionmnist --arch_type fc1 --end_iter 1 --prune_iterations 1 --prune_percent 20 --trial_iterations 1 --patience 4"
 
-python_loc="/home/student/j/jankettler/python/Python-3.7.16/python"
+python_loc="/home/student/j/jankettler/.local/share/pdm/venvs/Ba-tgOD6Eqp-3.7/bin/python3.7"
 
-cluster_cmd="qsub -v -b -cwd -l mem=8G,cuda=1" 
+cluster_cmd="qsub -v -b -cwd -l mem=8G"
+#-b
+#cuda=1 
 
 #for seed in 1 2 3 4 5; do echo $cluster_cmd $python_loc $MAIN $ARGS --seed $seed; done
 
-$cluster_cmd $python_loc $MAIN $ARGS_TEST --seed $seed
+echo $cluster_cmd $python_loc $MAIN $ARGS_TEST --seed 1
+echo "PATH:" $PATH
+echo "which python3.7"
+which python3.7
+echo "working directory and content"
+pwd
+ls
+$cluster_cmd $python_loc $MAIN $ARGS_TEST --seed 1
