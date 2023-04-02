@@ -5,23 +5,9 @@ name = ""
 version = ""
 description = ""
 authors = [
-    {name = "", email = "jan.kettler99@gmail.com"},
+    {name = "", email = ""},
 ]
-dependencies = [
-    "Keras",
-    "Keras-Preprocessing",
-    "llvmlite",
-    "matplotlib",
-    "mpi4py",
-    "numba",
-    "numpy",
-    "pandas",
-    "python-dateutil",
-    "scikit-learn",
-    "scipy",
-    "tensorflow",
-    "psutil>=5.9.4",
-]
+dependencies = ["Keras", "Keras-Preprocessing", "llvmlite", "matplotlib", "mpi4py", "numba", "numpy", "pandas", "python-dateutil", "scikit-learn", "scipy", "tensorflow", "psutil"]
 requires-python = ">=3.7"
 license = {text = "MIT"}
 

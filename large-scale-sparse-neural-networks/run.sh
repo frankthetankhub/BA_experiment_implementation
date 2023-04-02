@@ -2,30 +2,19 @@
 
 ARGS="--monitor --epochs 10 --processes 2 --n-neurons 784 --n-neurons 1000 --n-neurons 1000 --n-neurons 1000 --n-neurons 10"
 location="/net/projects/scratch/summer/valid_until_31_January_2024/jankettler/Ba/large-scale-sparse-neural-networks/parallel_training.py"
-main_location="/home/jan/BA/code/large-scale-sparse-neural-networks/parallel_training.py"
-python_loc="/home/student/j/jankettler/python/Python-3.7.16/python"
 
-#echo mpiexec -n 6 python parallel_training.py $ARGS
+python_loc="/net/projects/scratch/summer/valid_until_31_January_2024/jankettler/python/bin/python3.7"
 
-#for SEED in 1 2 3 4 5; do echo mpiexec -n 6 python parallel_training.py $ARGS --seed $SEED; done
+#echo mpiexec -n 6 python parallel_training.py $ARGS 
 
-#mpiexec -4 6 $python_loc $location $ARGS
-# for seed in 1 2 3 4 5; do echo qhost -h qhost -h xdev.ikw.uni-osnabrueck.de; done
-
-#-l um spezifizierungen anzugeben
-#-b um binaries zu zulassen
-#-v PATH --> die neue umgebung übernimmt die PATH variable aus dem scope wo wir gerade sind(venv) 
-#-cwd: current working directory; or wd=path/to/directory um working directory zu setzen
-
-
-python_cmd="/usr/bin/mpiexec -n 2 --map-by socket --bind-to core --report-bindings $python_loc $location"
-
+python_cmd="$HOME/scratch/openmpi/bin/mpiexec -n 2 --report-bindings $python_loc $location"
+no_mpi_command="python parallel_training.py"
 #for SEED in 1 2 3 4 5; do echo $cmd $ARGS --seed $SEED; done
 
 echo "First argument passed should be seed. Its value is: $1"
 echo "Check CPU with -lscpu-"
 lscpu
-echo "The following command is going to be executed:"
-echo "$python_cmd $ARGS --seed $1"
-which mpiexec
+echo $LD_LIBRARY_PATH
+echo $PATH
 $python_cmd $ARGS --seed $1
+# $no_mpi_command $ARGS --seed $1
