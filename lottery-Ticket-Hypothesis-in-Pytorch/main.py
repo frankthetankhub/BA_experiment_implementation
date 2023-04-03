@@ -432,6 +432,7 @@ if __name__=="__main__":
     parser.add_argument("--min_acc_delta", default=0.3, type=float, help="How big needs the accuracy gain be to disable early-stopping counter")
     parser.add_argument("--patience", default=2, type=int, help="How many times acc < best_acc befor early-stopping Trainin. Defaults to allowing lower validation acc 2 times before stopping.")
     parser.add_argument("--seed", default=1, type=int, help="The seed to use for random pruning.")
+    parser.add_argument("--arch_size", default="mnist_small", type=str, help="mnist_small | mnist_large | cifar_small | cifar_large")
 
 
     
