@@ -154,6 +154,7 @@ def main(args, ITE=0):
             comp[_ite] = comp1
             pbar = tqdm(range(args.end_iter))
             early_stopping = 0
+            has_stopped=False
             for iter_ in pbar:
 
                 # Frequency for Testing
@@ -172,6 +173,8 @@ def main(args, ITE=0):
                         early_stopping +=1
                         if early_stopping > patience:
                             early_stopping=0
+                            has_stopped=True
+                            writer.add_scalar("Early stopping Epoch per Pruning iteration",iter_, _ite)
                             break
 
                 # Training
@@ -188,6 +191,8 @@ def main(args, ITE=0):
                         f'Train Epoch: {iter_}/{args.end_iter} Loss: {loss:.6f} Accuracy: {accuracy:.2f}% Best Accuracy: {best_accuracy:.2f}%')       
 
                 #writer.add_scalar("accuracy per epoch", )
+            if not has_stopped:
+                writer.add_scalar("Early stopping Epoch per Pruning iteration",args.end_iter, _ite)
             time_per_pruning_iteration = perf_counter() - start_of_pruning_iteration
             writer.add_scalar('best accuracy reached in run', best_accuracy, comp1) #'Accuracy/test'
             writer.add_scalar("Time per Pruning Iteration", time_per_pruning_iteration, _ite)
