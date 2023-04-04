@@ -24,7 +24,8 @@ ls
 echo "setting LD_LIBRARY_PATH to /lib"
 export LD_LIBRARY_PATH="/lib/":$LD_LIBRARY_PATH
 echo $LD_LIBRARY_PATH
+name="fashionmnist_large"
 out_file="out_lt_fashionmnist_large/$(date)/"
 error_file="error_lth_fashionmnist_large/$(date)/"
-for seed in 1 2 3 4 5; do echo $cluster_cmd -o $out_file$seed -e $error_file$seed $python_loc $MAIN $ARGS_TEST --seed $seed >> "runs from $(date) fashionmnist_large.txt"; done
-for seed in 1 2 3 4 5; do $cluster_cmd -o $out_file$seed -e $error_file$seed $python_loc $MAIN $ARGS_TEST --seed $seed; done
+for seed in 1 2 3 4 5; do echo $cluster_cmd -o $out_file$name$seed -e $error_file$name$seed $python_loc $MAIN $ARGS_TEST --seed $seed >> "runs from $(date) fashionmnist_large.txt"; done
+for seed in 1 2 3 4 5; do $cluster_cmd -o $out_file$name$seed -e $error_file$name$seed $python_loc $MAIN $ARGS_TEST --seed $seed; done

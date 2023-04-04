@@ -24,7 +24,9 @@ ls
 echo "setting LD_LIBRARY_PATH to /lib"
 export LD_LIBRARY_PATH="/lib/":$LD_LIBRARY_PATH
 echo $LD_LIBRARY_PATH
+name="cifar10_large"
 out_file="out_lt_cifar10_large/$(date)/"
 error_file="error_lth_cifar10_large/$(date)/"
-for seed in 1 2 3 4 5; do echo $cluster_cmd -o $out_file$seed -e $error_file$seed $python_loc $MAIN $ARGS_TEST --seed $seed >> "runs from $(date) cifar10_large.txt"; done
-for seed in 1 2 3 4 5; do $cluster_cmd -o $out_file$seed -e $error_file$seed $python_loc $MAIN $ARGS_TEST --seed $seed; done
+echo $out_file$name$seed
+for seed in 1 2 3 4 5; do echo $cluster_cmd -o $out_file$name$seed -e $out_file$name$seed $python_loc $MAIN $ARGS_TEST --seed $seed >> "runs from $(date) cifar10_large.txt"; done
+for seed in 1 2 3 4 5; do $cluster_cmd -o $out_file$name$seed -e $error_file$name$seed $python_loc $MAIN $ARGS_TEST --seed $seed; done
