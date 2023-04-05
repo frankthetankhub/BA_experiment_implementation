@@ -38,6 +38,7 @@ def set_seed(seed):
 # Main
 def main(args, ITE=0):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(device)
     reinit = True if args.prune_type=="reinit" else False
     min_acc_delta = args.min_acc_delta
     patience = args.patience
