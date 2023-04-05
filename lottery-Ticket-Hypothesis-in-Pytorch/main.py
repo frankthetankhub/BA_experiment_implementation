@@ -102,7 +102,7 @@ def main(args, ITE=0):
         print(f"Invalid model/size choice: {args.arch_size}, please select one of the following: {models}")
         exit()
     from archs import fc1
-    model = fc1.fc1(setup=args.arch_size)
+    model = fc1.fc1(setup=args.arch_size).to(device)
     for _ in range(ITE):
         # Weight Initialization
         model.apply(weight_init)
