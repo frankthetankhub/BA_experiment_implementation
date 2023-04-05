@@ -50,22 +50,22 @@ def main(args, ITE=0):
     if args.dataset == "mnist":
         traindataset = datasets.MNIST('../data', train=True, download=True,transform=transform)
         testdataset = datasets.MNIST('../data', train=False, transform=transform)
-        from archs.mnist import AlexNet, LeNet5, fc1, vgg, resnet
+        #from archs.mnist import AlexNet, LeNet5, fc1, vgg, resnet
 
     elif args.dataset == "cifar10":
         traindataset = datasets.CIFAR10('../data', train=True, download=True,transform=transform)
         testdataset = datasets.CIFAR10('../data', train=False, transform=transform)      
-        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, resnet, densenet 
+        #from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, resnet, densenet 
 
     elif args.dataset == "fashionmnist":
         traindataset = datasets.FashionMNIST('../data', train=True, download=True,transform=transform)
         testdataset = datasets.FashionMNIST('../data', train=False, transform=transform)
-        from archs.mnist import AlexNet, LeNet5, fc1, vgg, resnet 
+        #from archs.mnist import AlexNet, LeNet5, fc1, vgg, resnet 
 
     elif args.dataset == "cifar100":
         traindataset = datasets.CIFAR100('../data', train=True, download=True,transform=transform)
         testdataset = datasets.CIFAR100('../data', train=False, transform=transform)   
-        from archs.cifar100 import AlexNet, fc1, LeNet5, vgg, resnet  
+        #from archs.cifar100 import AlexNet, fc1, LeNet5, vgg, resnet  
     
     # If you want to add extra datasets paste here
 
@@ -79,22 +79,30 @@ def main(args, ITE=0):
     
     # Importing Network Architecture
     global model
-    if args.arch_type == "fc1":
-       model = fc1.fc1().to(device)
-    elif args.arch_type == "lenet5":
-        model = LeNet5.LeNet5().to(device)
-    elif args.arch_type == "alexnet":
-        model = AlexNet.AlexNet().to(device)
-    elif args.arch_type == "vgg16":
-        model = vgg.vgg16().to(device)  
-    elif args.arch_type == "resnet18":
-        model = resnet.resnet18().to(device)   
-    elif args.arch_type == "densenet121":
-        model = densenet.densenet121().to(device)   
-    # If you want to add extra model paste here
-    else:
-        print("\nWrong Model choice\n")
+    # not needed as we will only focus on fully connected networks
+    # if args.arch_type == "fc1":
+    #    model = fc1.fc1().to(device)
+    # elif args.arch_type == "lenet5":
+    #     model = LeNet5.LeNet5().to(device)
+    # elif args.arch_type == "alexnet":
+    #     model = AlexNet.AlexNet().to(device)
+    # elif args.arch_type == "vgg16":
+    #     model = vgg.vgg16().to(device)  
+    # elif args.arch_type == "resnet18":
+    #     model = resnet.resnet18().to(device)   
+    # elif args.arch_type == "densenet121":
+    #     model = densenet.densenet121().to(device)   
+    
+    # # If you want to add extra model paste here
+    # else:
+    #     print("\nWrong Model choice\n")
+    #     exit()
+    models = ['mnist_small', ' mnist_large', ' cifar_small', 'cifar_large']
+    if args.arch_size not in models:
+        print(f"Invalid model/size choice: {args.arch_size}, please select one of the following: {models}")
         exit()
+    from archs import fc1
+    model = fc1.fc1(setup=args.arch_size)
     for _ in range(ITE):
         # Weight Initialization
         model.apply(weight_init)
