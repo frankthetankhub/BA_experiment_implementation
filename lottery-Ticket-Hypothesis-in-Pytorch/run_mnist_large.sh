@@ -28,4 +28,4 @@ name="mnist_large"
 out_file="out_lt_mnist_large/$(date)/"
 error_file="error_lth_mnist_large/$(date)/"
 for seed in 1 2 3 4 5; do echo $cluster_cmd -o $out_file$name$seed -e $error_file$name$seed $python_loc $MAIN $ARGS_TEST --seed $seed >> "runs from $(date) mnist_large.txt"; done
-for seed in 1 2 3 4 5; do $cluster_cmd -o $out_file$name$seed -e $error_file$name$seed $python_loc $MAIN $ARGS_TEST --seed $seed; done
+for seed in 1 2 3 4 5; do $cluster_cmd -o "$out_file" -e "$error_file" $python_loc $MAIN $ARGS_TEST --seed $seed; done

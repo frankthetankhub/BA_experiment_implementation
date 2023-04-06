@@ -20,5 +20,5 @@ echo $LD_LIBRARY_PATH
 export LD_LIBRARY_PATH="/lib/":$LD_LIBRARY_PATH
 echo $LD_LIBRARY_PATH
 which python
-for seed in 1 2 3 4 5; do echo $cluster_cmd -o $out_file$name$seed -e $error_file$name$seed python $MAIN $ARGS_TEST --seed $seed >> "runs from $(date) mnist_small.txt"; done
+for seed in 1 2 3 4 5; do echo $cluster_cmd -o $out_file$name$seed -e $error_file$name$seed python $MAIN $ARGS --seed $seed >> "runs from $(date) mnist_small.txt"; done
 for seed in 1 2 3 4 5; do $cluster_cmd python $MAIN $ARGS --seed $seed; done
