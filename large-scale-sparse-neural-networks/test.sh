@@ -11,8 +11,9 @@ for FILE in configs/*;
     cwd="/home/student/j/jankettler/scratch/Ba/large-scale-sparse-neural-networks"
     cmd_alt="mpiexec -n 6 $sas $cwd/parallel_training.py $ARGS --config_file $FILE"
     cmd="mpiexec -n 6 pdm run python parallel_training.py $ARGS --config_file $FILE"
+    cluster_cmd="qsub -b y -V -l mem=8G -cwd -pe default 6"
     echo $cmd
     echo "testing for seed loop"
-    for SEED in {1..2}; do echo $cmd --seed $SEED; done
+    for SEED in {1..2}; do echo $cluster_cmd $cmd --seed $SEED; done
     for SEED in {1..2}; do $cmd --seed $SEED; done
 done 
