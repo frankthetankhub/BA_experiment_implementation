@@ -66,7 +66,7 @@ if __name__ == '__main__':
                         help='log file to write, in additon to output stream; currently does nothing')
     parser.add_argument('--config_file', default="", type=str,
                         help='The config file that was used to generate all the arguments')
-    parser.add_argument('--log-level', default='info', dest='log_level', help='log level (debug, info, warn, error)')
+    parser.add_argument('--log-level', default='debug', dest='log_level', help='log level (debug, info, warn, error)')
 
     # Model configuration
     parser.add_argument('--batch-size', type=int, default=128, help='input batch size for training (default: 128)')
@@ -188,15 +188,18 @@ if __name__ == '__main__':
         learning_rate = learning_rate * (num_workers)
 
     print(dimensions)
+    print(f"number of workers: {num_workers}")
 
 
     # Initialize logger
     start_of_trial = datetime.now().strftime("%d_%m_%H_%M")
     # base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+"/" + start_of_trial + "/" + str(args.epochs) + "_epochs_e" + \
     #                  str(epsilon) + "_rand" + str(args.seed) + "_num_workers_" + str(num_workers)
+
+    # evtl noch einbauen, dass start_of_trial etc nur gemacht wird wenn rank=0 damit nicht zu viele ordner erstellt werden.
     if config_file:
-        base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+"/" + start_of_trial + "/" + str(args.epochs) + "_epochs_e" + \
-                        str(epsilon) + "_rand" + str(args.seed) + "_num_workers_" + str(num_workers)
+        base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+ "/" + config_file + "/" + "seed_" + str(args.seed) + "/" + str(args.epochs) + "_epochs_e" + \
+                        str(epsilon) + "_num_workers_" + str(num_workers) #start_of_trial
     else:
         base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+ "/" + config_file + "/" + start_of_trial + "/" + str(args.epochs) + "_epochs_e" + \
                         str(epsilon) + "_rand" + str(args.seed) + "_num_workers_" + str(num_workers)
