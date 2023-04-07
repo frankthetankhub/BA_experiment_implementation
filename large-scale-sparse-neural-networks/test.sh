@@ -15,5 +15,5 @@ for FILE in configs/*;
     echo $cmd
     echo "testing for seed loop"
     for SEED in {1..2}; do echo $cluster_cmd $cmd --seed $SEED; done
-    for SEED in {1..2}; do $cmd --seed $SEED; done
+    for SEED in {1..2}; do $cluster_cmd $cmd --seed $SEED; done
 done 
