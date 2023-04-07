@@ -10,6 +10,6 @@ for FILE in configs/*;
     cmd="mpiexec -n 6 $sas $cwd/parallel_training.py $ARGS"
     echo $cmd
     echo "testing for seed loop"
-    for SEED in 1..5; do echo $cmd --seed $SEED
+    for SEED in {1..5}; do echo $cmd --seed $SEED; done
     #$cmd
 done 
