@@ -92,7 +92,7 @@ if __name__ == '__main__':
                                                              '"madelon",  or "mnist"')
     parser.add_argument('--activations', type=float, default=None, action="append", help='The α value (slope) of AlternateLeftRelu. Length should match with length of n-neurons')
 
-
+    parser.add_argument('--start_epoch_importancepruning', type=int, default=200, help='The epoch at which importance pruning will be part of the weight evolution. Importance pruning will only be done every %20 epochs.')
 
     args = parser.parse_args()
 
@@ -117,6 +117,7 @@ if __name__ == '__main__':
     config_file = args.config_file
     activations = args.activations
     print(config_file)
+    print(args)
 
     # Comment this if you would like to use the full power of randomization. I use it to have repeatable results
     dimensions = n_hidden_neurons
@@ -187,7 +188,6 @@ if __name__ == '__main__':
     if args.synchronous:
         learning_rate = learning_rate * (num_workers)
 
-    print(dimensions)
     print(f"number of workers: {num_workers}")
 
 

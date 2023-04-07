@@ -1,0 +1,1 @@
+--dataset cifar10 --monitor --epochs 10 --n-neurons 300 --n-neurons 100 --activations -0.75 --activations 0.75 --weight-decay 0.0 --epsilon 20 --n-training-samples 50000

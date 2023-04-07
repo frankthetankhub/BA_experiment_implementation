@@ -135,6 +135,13 @@ class SETMPIModel(object):
         self.lr_decay = 0.5
         self.num_workers = config['num_workers']
         self.momentum_correction = 1.
+        try:
+            self.start_epoch_importancepruning = config["start_epoch_importancepruning"]
+        except Exception as e:
+            print(e)
+            print("setting startepoch of importance pruning to 200")
+            self.start_epoch_importancepruning = 200
+
 
         self.save_filename = ""
         self.input_layer_connections = []
@@ -338,7 +345,7 @@ class SETMPIModel(object):
             # uncomment line below to stop evolution of dense weights more than 80% non-zeros
             # if self.w[i].count_nonzero() / (self.w[i].get_shape()[0]*self.w[i].get_shape()[1]) < 0.8:
 
-            if self.prune and not worker and (epoch % 20 == 0 and epoch > 200): #wichtige stelle da hier das importance pruning ausgeführt wird
+            if self.prune and not worker and (epoch % 20 == 0 and epoch > self.start_epoch_importancepruning): #200 wichtige stelle da hier das importance pruning ausgeführt wird 
                 sum_incoming_weights = np.abs(self.w[i]).sum(axis=0)
                 t = np.percentile(sum_incoming_weights, 10)
                 sum_incoming_weights = np.where(sum_incoming_weights <= t, 0, sum_incoming_weights)
