@@ -1,6 +1,7 @@
 # This is the runfile for not submitting jobs
 
 # TODO include copying of config file into the relevant folder
+# TODO include more memory for cifar10Large as the job terminates
 for FILE in configs/*; 
     do echo $FILE; 
     ARGS=$(cat $FILE)

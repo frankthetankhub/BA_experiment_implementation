@@ -66,7 +66,7 @@ if __name__ == '__main__':
                         help='log file to write, in additon to output stream; currently does nothing')
     parser.add_argument('--config_file', default="", type=str,
                         help='The config file that was used to generate all the arguments')
-    parser.add_argument('--log-level', default='debug', dest='log_level', help='log level (debug, info, warn, error)')
+    parser.add_argument('--log-level', default='info', dest='log_level', help='log level (debug, info, warn, error)')
 
     # Model configuration
     parser.add_argument('--batch-size', type=int, default=128, help='input batch size for training (default: 128)')
