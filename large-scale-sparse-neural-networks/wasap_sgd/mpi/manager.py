@@ -46,7 +46,7 @@ class MPIManager(object):
     """
 
     def __init__(self, comm, data, algo, model, num_epochs, save_filename, num_masters=1, num_processes=1,
-                 synchronous=False, monitor=False):
+                 synchronous=False, monitor=False, save_weight_interval=10):
         """Create MPI communicator(s) needed for training, and create worker
             or master object as appropriate.
             Params:
@@ -66,6 +66,7 @@ class MPIManager(object):
         self.num_masters = num_masters
         self.num_processes = num_processes
         self.save_filename = save_filename
+        self.save_weight_interval = save_weight_interval
 
         if comm.Get_size() != 1:
             n_instances, remainder = divmod(comm.Get_size() - self.num_masters, self.num_processes)
@@ -169,7 +170,8 @@ class MPIManager(object):
                                          num_epochs=self.num_epochs,
                                          monitor=self.monitor,
                                          num_sync_workers=num_sync_workers,
-                                         save_filename=self.save_filename
+                                         save_filename=self.save_filename,
+                                         save_weight_interval=self.save_weight_interval
                                 )
             else:
 

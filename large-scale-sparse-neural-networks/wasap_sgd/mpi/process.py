@@ -443,7 +443,7 @@ class MPIMaster(MPIProcess):
 
     def __init__(self, parent_comm, parent_rank=None, child_comm=None,
                  num_epochs=1, data=None, algo=None, model=None,
-                 num_sync_workers=1, monitor=False, save_filename=None):
+                 num_sync_workers=1, monitor=False, save_filename=None, save_weight_interval = 10):
         """Parameters:
               child_comm: MPI communicator used to contact children"""
         if child_comm is None:
@@ -458,6 +458,7 @@ class MPIMaster(MPIProcess):
         self.biases_to_save = []
         self.candidates = {}
         self.averaged = False
+        self.save_weight_interval = save_weight_interval
 
         self.num_workers = child_comm.Get_size() - 1  # all processes but one are workers
         self.metrics = np.zeros((num_epochs + 1, 4))
@@ -635,6 +636,8 @@ class MPIMaster(MPIProcess):
 
                     self.model.set_weights(self.new_weights)
                     self.weights = self.model.get_weights()
+                    self.weights_to_save.append(self.weights['w'])
+                    self.biases_to_save.append(self.weights['b'])
 
                     self.validate()
                     self.logger.info(f"Master epoch {self.epoch}, timestep {self.time_step}")
@@ -706,6 +709,11 @@ class MPIMaster(MPIProcess):
                                 self.logger.info(f"Weights evolution time  {t6 - t5}")
                                 self.evolution_time += (t6 - t5).seconds
                                 self.weights = self.model.get_weights()
+
+                                # save weights after every so many timesteps
+                                if ((self.epoch -1) % self.save_weight_interval == 0):
+                                    np.savez_compressed(self.save_filename + "_weights_epoch" + str(self.epoch -1) + ".npz", self.weights['w'])
+                                    np.savez_compressed(self.save_filename + "_biases_epoch" + str(self.epoch -1) + ".npz", self.weights['b'])
 
                             self.logger.info(f"Master epoch {self.epoch}, timestep {self.time_step}")
                             self.logger.info(f"Learning rate is {self.model.learning_rate}")
@@ -787,8 +795,8 @@ class MPIMaster(MPIProcess):
         if self.save_filename != "":
             np.savetxt(self.save_filename + ".txt", self.metrics)
 
-        np.savez_compressed(self.save_filename + "_weights.npz", *self.weights_to_save)
-        np.savez_compressed(self.save_filename + "_biases.npz", *self.biases_to_save)
+        np.savez_compressed(self.save_filename + "_weights_final.npz", *self.weights_to_save)
+        np.savez_compressed(self.save_filename + "_biases_final.npz", *self.biases_to_save)
 
         self.logger.info("Done training")
         self.logger.info(f"Master idle time: {self.idle_time}")
