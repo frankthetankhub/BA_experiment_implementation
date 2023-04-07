@@ -1,1 +1,1 @@
---dataset mnist --monitor --epochs 10 --n-neurons 300 --n-neurons 100 --activations -0.6 --activations 0.6
+--dataset mnist --monitor --epochs 10 --n-neurons 300 --n-neurons 100 --activations -0.6 --activations 0.6 --weight-decay 0.0 --epsilon 20
