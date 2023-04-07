@@ -80,7 +80,7 @@ if __name__ == '__main__':
     parser.add_argument('--zeta', type=float, default=0.3,
                         help='It gives the percentage of unimportant connections which are removed and replaced with '
                              'random ones after every epoch(in [0..1])')
-    parser.add_argument('--n-neurons', type=int, default=0,action="append", help='Number of neurons in the hidden layer')
+    parser.add_argument('--n-neurons', type=int, default=None,action="append", help='Number of neurons in the hidden layer')
     parser.add_argument('--prune', default=True, help='Perform Importance Pruning', action='store_true')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=10,
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     parser.add_argument('--augmentation', default=True, help='Data augmentation', action='store_true')
     parser.add_argument('--dataset', default='fashionmnist', help='Specify dataset. One of "cifar10", "fashionmnist",'
                                                              '"madelon",  or "mnist"')
-    parser.add_argument('--activations', type=int, default=0, action="append", help='The α value (slope) of AlternateLeftRelu. Length should match with (length of n-neurons -2)')
+    parser.add_argument('--activations', type=float, default=None, action="append", help='The α value (slope) of AlternateLeftRelu. Length should match with length of n-neurons')
 
 
 
