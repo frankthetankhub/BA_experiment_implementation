@@ -64,6 +64,8 @@ if __name__ == '__main__':
     # logging configuration
     parser.add_argument('--log-file', default=None, dest='log_file',
                         help='log file to write, in additon to output stream; currently does nothing')
+    parser.add_argument('--config_file', default="", type=str,
+                        help='The config file that was used to generate all the arguments')
     parser.add_argument('--log-level', default='info', dest='log_level', help='log level (debug, info, warn, error)')
 
     # Model configuration
@@ -78,7 +80,7 @@ if __name__ == '__main__':
     parser.add_argument('--zeta', type=float, default=0.3,
                         help='It gives the percentage of unimportant connections which are removed and replaced with '
                              'random ones after every epoch(in [0..1])')
-    parser.add_argument('--n-neurons', type=int, default=None,action="append", help='Number of neurons in the hidden layer')
+    parser.add_argument('--n-neurons', type=int, default=0,action="append", help='Number of neurons in the hidden layer')
     parser.add_argument('--prune', default=True, help='Perform Importance Pruning', action='store_true')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=10,
@@ -88,9 +90,9 @@ if __name__ == '__main__':
     parser.add_argument('--augmentation', default=True, help='Data augmentation', action='store_true')
     parser.add_argument('--dataset', default='fashionmnist', help='Specify dataset. One of "cifar10", "fashionmnist",'
                                                              '"madelon",  or "mnist"')
+    parser.add_argument('--activations', type=int, default=0, action="append", help='The α value (slope) of AlternateLeftRelu. Length should match with (length of n-neurons -2)')
 
-    #added by me
-    #parser.add_argument('--seed', type=int, default=0, help='The Seed to use for RNG, to keep results reproducible')
+
 
     args = parser.parse_args()
 
@@ -112,43 +114,67 @@ if __name__ == '__main__':
     n_testing_samples = args.n_testing_samples
     learning_rate_decay = args.lr_rate_decay
     class_weights = None
+    config_file = args.config_file
+    activations = args.activations
+    print(config_file)
 
-    # Comment this if you would like to use the full power of randomization. I use it to have repeatable results.
+    # Comment this if you would like to use the full power of randomization. I use it to have repeatable results
+    dimensions = n_hidden_neurons
+    assert len(dimensions) == len(activations) , f"The amount of activation functions does not match the amount of layers; number of activation functions:{len(activations)} and values:{activations}, number of layers as specified in n-neurons:{len(dimensions)} , with values:{dimensions}"
     np.random.seed(args.seed)
-    print(n_hidden_neurons)
-
+    print(f"dimensions: {dimensions}")
+    print(f"activations: {activations}")
     # Model architecture
     if args.dataset == 'fashionmnist' or args.dataset == 'mnist':
         # Model architecture mnist
-        if (not n_hidden_neurons) or len(n_hidden_neurons)!= 5 or n_hidden_neurons[0]!=784 or n_hidden_neurons[-1]!=10:
-            dimensions = (784, 1000, 1000, 1000, 10)
+        if (not dimensions or not activations):
+            print("Either Dimensions or activations not specified")
+            dimensions = [784, 1000, 1000, 1000, 10]
+            activations = (AlternatedLeftReLU(-0.6), AlternatedLeftReLU(0.6), AlternatedLeftReLU(-0.6), Softmax)
         else:
+            #set network parameters as specified in args
             dimensions = n_hidden_neurons
+            dimensions.insert(0, 784)
+            dimensions.append(10)
+            activations = [AlternatedLeftReLU(value) for value in activations]
+            activations.append(Softmax)
         loss = 'cross_entropy'
         weight_init = 'he_uniform'
-        activations = (AlternatedLeftReLU(-0.6), AlternatedLeftReLU(0.6), AlternatedLeftReLU(-0.6), Softmax)
+        
         if args.dataset == 'fashionmnist':
             X_train, Y_train, X_test, Y_test = load_fashion_mnist_data(args.n_training_samples, args.n_testing_samples)
         else:
             X_train, Y_train, X_test, Y_test = load_mnist_data(args.n_training_samples, args.n_testing_samples)
     elif args.dataset == 'madalon':
         # Model architecture madalon
-        dimensions = (500, 400, 100, 400, 1)
+        dimensions = [500, 400, 100, 400, 1]
         loss = 'mse'
         activations = (Relu, Relu, Relu, Sigmoid)
         X_train, Y_train, X_test, Y_test = load_madelon_data()
     elif args.dataset == 'cifar10':
         # Model architecture cifar10
-        dimensions = (3072, 4000, 1000, 4000, 10)
+        if (not dimensions or not activations):
+            print("Either Dimensions or activations not specified")
+            dimensions = [3072, 4000, 1000, 4000, 10]
+            activations = (AlternatedLeftReLU(-0.75), AlternatedLeftReLU(0.75), AlternatedLeftReLU(-0.75), Softmax)
+        else:
+            #set network parameters as specified in args
+            dimensions = n_hidden_neurons
+            dimensions.insert(0, 3072)
+            dimensions.append(10)
+            activations = [AlternatedLeftReLU(value) for value in activations]
+            activations.append(Softmax)
         weight_init = 'he_uniform'
         loss = 'cross_entropy'
-        activations = (AlternatedLeftReLU(-0.75), AlternatedLeftReLU(0.75), AlternatedLeftReLU(-0.75), Softmax)
+        
         if args.augmentation:
             X_train, Y_train, X_test, Y_test = load_cifar10_data_not_flattened(args.n_training_samples, args.n_testing_samples)
         else:
             X_train, Y_train, X_test, Y_test = load_cifar10_data(args.n_training_samples, args.n_testing_samples)
     else:
         raise NotImplementedError("The given dataset is not available")
+
+    
 
     comm = MPI.COMM_WORLD.Dup()
 
@@ -166,8 +192,14 @@ if __name__ == '__main__':
 
     # Initialize logger
     start_of_trial = datetime.now().strftime("%d_%m_%H_%M")
-    base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+"/" + start_of_trial + "/" + str(args.epochs) + "_epochs_e" + \
-                     str(epsilon) + "_rand" + str(args.seed) + "_num_workers_" + str(num_workers)
+    # base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+"/" + start_of_trial + "/" + str(args.epochs) + "_epochs_e" + \
+    #                  str(epsilon) + "_rand" + str(args.seed) + "_num_workers_" + str(num_workers)
+    if config_file:
+        base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+"/" + start_of_trial + "/" + str(args.epochs) + "_epochs_e" + \
+                        str(epsilon) + "_rand" + str(args.seed) + "_num_workers_" + str(num_workers)
+    else:
+        base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+ "/" + config_file + "/" + start_of_trial + "/" + str(args.epochs) + "_epochs_e" + \
+                        str(epsilon) + "_rand" + str(args.seed) + "_num_workers_" + str(num_workers)
     log_file = base_file_name + "_logs_execution.txt"
 
     save_filename = base_file_name + "_process_" + str(rank)
