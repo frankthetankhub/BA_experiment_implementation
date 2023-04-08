@@ -11,7 +11,7 @@ EXP_SETUP_ARGS="--epsilon 20 --start_epoch_importancepruning 200"
 cwd="/home/student/j/jankettler/scratch/Ba/lottery-Ticket-Hypothesis-in-Pytorch"
 #cmd_alt="mpiexec -n 6 $sas $cwd/parallel_training.py $ARGS --config_file $base_name"
 cmd="pdm run python main.py $ARGS"
-cluster_cmd="qsub -q $queue -b y -cwd -l mem=14G,cuda=1 -V"
+cluster_cmd="qsub -b y -cwd -l mem=14G,cuda=1 -V"
 cluster_cmd_cifar="qsub -q $queue -b y -cwd -l mem=20G,cuda=1 -V"
 echo $cmd
 #if [[ $base_name == cifar10* ]];
