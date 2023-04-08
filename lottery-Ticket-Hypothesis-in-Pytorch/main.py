@@ -97,7 +97,7 @@ def main(args, ITE=0):
     # else:
     #     print("\nWrong Model choice\n")
     #     exit()
-    models = ['mnist_small', ' mnist_large', ' cifar_small', 'cifar_large']
+    models = ['mnist_small', 'mnist_medium', ' mnist_large', 'cifar_small', 'cifar_medium', 'cifar_large']
     if args.arch_size not in models:
         print(f"Invalid model/size choice: {args.arch_size}, please select one of the following: {models}")
         exit()
@@ -172,12 +172,12 @@ def main(args, ITE=0):
 
                     # Save Weights
                     accuracy_diff = accuracy - best_accuracy 
-                    if accuracy_diff > 0:
+                    if accuracy_diff > min_acc_delta:
                         best_accuracy = accuracy
                         utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/")
                         torch.save(model,f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_trial}/{_ite}_model_{args.prune_type}.pth.tar")
-                        if accuracy_diff > min_acc_delta:
-                            early_stopping = 0
+                        # if accuracy_diff > min_acc_delta:
+                        early_stopping = 0
                     else:
                         early_stopping +=1
                         if early_stopping > patience:
@@ -441,10 +441,10 @@ if __name__=="__main__":
     parser.add_argument("--prune_percent", default=20, type=int, help="Pruning percent")
     parser.add_argument("--prune_iterations", default=24, type=int, help="Pruning iterations count")
     parser.add_argument("--trial_iterations", default=1, type=int, help="How many Runs (train and iteratively prune a single network) to perform")
-    parser.add_argument("--min_acc_delta", default=0.3, type=float, help="How big needs the accuracy gain be to disable early-stopping counter")
+    parser.add_argument("--min_acc_delta", default=0.1, type=float, help="How big needs the accuracy gain be to disable early-stopping counter")
     parser.add_argument("--patience", default=2, type=int, help="How many times acc < best_acc befor early-stopping Trainin. Defaults to allowing lower validation acc 2 times before stopping.")
     parser.add_argument("--seed", default=1, type=int, help="The seed to use for random pruning.")
-    parser.add_argument("--arch_size", default="mnist_small", type=str, help="mnist_small | mnist_large | cifar_small | cifar_large")
+    parser.add_argument("--arch_size", default="mnist_small", type=str, help="mnist_small | mnist_medium | mnist_large | cifar_small | cifar_medium | cifar_large")
 
 
     
