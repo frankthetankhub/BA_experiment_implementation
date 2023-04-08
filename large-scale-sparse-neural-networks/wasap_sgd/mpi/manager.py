@@ -46,7 +46,7 @@ class MPIManager(object):
     """
 
     def __init__(self, comm, data, algo, model, num_epochs, save_filename, num_masters=1, num_processes=1,
-                 synchronous=False, monitor=False, save_weight_interval=10):
+                 synchronous=False, monitor=False, save_weight_interval=10, n_layers=4):
         """Create MPI communicator(s) needed for training, and create worker
             or master object as appropriate.
             Params:
@@ -85,6 +85,7 @@ class MPIManager(object):
         self.comm_instance = None
         self.is_master = None
         self.make_comms(comm)
+        self.n_layers = n_layers
 
     def make_comms(self, comm):
         """Define the network topology by creating communicators linking masters with their slaves.
@@ -171,7 +172,8 @@ class MPIManager(object):
                                          monitor=self.monitor,
                                          num_sync_workers=num_sync_workers,
                                          save_filename=self.save_filename,
-                                         save_weight_interval=self.save_weight_interval
+                                         save_weight_interval=self.save_weight_interval,
+                                         n_layers=self.n_layers
                                 )
             else:
 

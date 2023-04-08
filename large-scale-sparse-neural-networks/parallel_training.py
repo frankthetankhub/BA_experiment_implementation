@@ -177,7 +177,8 @@ if __name__ == '__main__':
     else:
         raise NotImplementedError("The given dataset is not available")
 
-    
+    # for the final average sequence the non-zero weights are printed. Pass over the amount of Layers to print.
+    n_layers = (len(dimensions)-1)
 
     comm = MPI.COMM_WORLD.Dup()
 
@@ -277,7 +278,7 @@ if __name__ == '__main__':
     manager = MPIManager(comm=comm, data=data, algo=algo, model=model,
                          num_epochs=args.epochs, num_masters=args.masters,
                          num_processes=args.processes, synchronous=args.synchronous,
-                         monitor=args.monitor, save_filename=save_filename, save_weight_interval=args.save_weight_interval)
+                         monitor=args.monitor, save_filename=save_filename, save_weight_interval=args.save_weight_interval, n_layers=n_layers)
 
     # Process 0 launches the training procedure
     if rank == 0:

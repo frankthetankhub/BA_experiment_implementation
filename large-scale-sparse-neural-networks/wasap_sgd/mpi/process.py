@@ -443,7 +443,8 @@ class MPIMaster(MPIProcess):
 
     def __init__(self, parent_comm, parent_rank=None, child_comm=None,
                  num_epochs=1, data=None, algo=None, model=None,
-                 num_sync_workers=1, monitor=False, save_filename=None, save_weight_interval = 10):
+                 num_sync_workers=1, monitor=False, save_filename=None,
+                 save_weight_interval = 10, n_layers = 4):
         """Parameters:
               child_comm: MPI communicator used to contact children"""
         if child_comm is None:
@@ -459,6 +460,7 @@ class MPIMaster(MPIProcess):
         self.candidates = {}
         self.averaged = False
         self.save_weight_interval = save_weight_interval
+        self.n_layers = n_layers
 
         self.num_workers = child_comm.Get_size() - 1  # all processes but one are workers
         self.metrics = np.zeros((num_epochs + 1, 4))
@@ -644,10 +646,11 @@ class MPIMaster(MPIProcess):
                     self.candidates = {}
                     self.averaged = True
                     self.logger.info(f"Final number of weights")
-                    self.logger.info(self.weights['w'][1].count_nonzero())
-                    self.logger.info(self.weights['w'][2].count_nonzero())
-                    self.logger.info(self.weights['w'][3].count_nonzero())
-                    self.logger.info(self.weights['w'][4].count_nonzero())
+                    for i in range(1,self.n_layers+1):
+                        self.logger.info(self.weights['w'][i].count_nonzero())
+                        # self.logger.info(self.weights['w'][2].count_nonzero())
+                        # self.logger.info(self.weights['w'][3].count_nonzero())
+                        # self.logger.info(self.weights['w'][4].count_nonzero())
 
     def do_update_sequence(self, source):
         """Update procedure:
