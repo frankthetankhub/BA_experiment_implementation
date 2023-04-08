@@ -1,9 +1,9 @@
-base_name=mnist_small
+base_name=cifar10_medium
 echo ${base_name}
 cv_hosts="albireo alioth beam bias cujam dimension gremium light nashira perception rigel shadow twilight vector voxel"
 host_commands="h=albireo,h=alioth,h=beam,h=biash,h=cujam,h=dimension,h=gremium,h=light,h=nashira,h=perception,h=rigel,h=shadow,h=twilight,h=vector,h=voxel"
 queue="cv.q"
-ARGS="--dataset mnist --arch_type fc1 --end_iter 250 --prune_iterations 24 --prune_percent 20 --trial_iterations 1 --patience 14 --arch_size mnist_small"
+ARGS="--dataset cifar10 --arch_type fc1 --end_iter 250 --prune_iterations 24 --prune_percent 20 --trial_iterations 1 --patience 14 --arch_size cifar_medium"
 EXP_SETUP_ARGS="--epsilon 20 --start_epoch_importancepruning 200"
 #sas="/net/projects/scratch/summer/valid_until_31_January_2024/jankettler/pdm_venvs/large-scale-sparse-neural-networks-yLgfzVYs-3.7/bin/python"
 #p="/scratch/pdm_venvs/large-scale-sparse-neural-networks-yLgfzVYs-3.7/bin/python3.7"
@@ -11,7 +11,7 @@ EXP_SETUP_ARGS="--epsilon 20 --start_epoch_importancepruning 200"
 cwd="/home/student/j/jankettler/scratch/Ba/lottery-Ticket-Hypothesis-in-Pytorch"
 #cmd_alt="mpiexec -n 6 $sas $cwd/parallel_training.py $ARGS --config_file $base_name"
 cmd="pdm run python main.py $ARGS"
-cluster_cmd="qsub -q $queue -b y -cwd -l mem=8G,cuda=1 -V"
+cluster_cmd="qsub -q $queue -b y -cwd -l mem=14G,cuda=1 -V"
 cluster_cmd_cifar="qsub -q $queue -b y -cwd -l mem=20G,cuda=1 -V"
 echo $cmd
 #if [[ $base_name == cifar10* ]];
