@@ -1,1 +1,1 @@
---dataset fashionmnist --monitor --epochs 10 --n-neurons 1000 --n-neurons 1000 --n-neurons 1000 --activations -0.6 --activations 0.6 --activations -0.6 --weight-decay 0.0 --epsilon 20
+--dataset fashionmnist --monitor --epochs 250 --n-neurons 1000 --n-neurons 1000 --n-neurons 1000 --activations -0.6 --activations 0.6 --activations -0.6 --weight-decay 0.0
