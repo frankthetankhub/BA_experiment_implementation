@@ -64,6 +64,9 @@ def load_mnist_data(n_training_samples, n_testing_samples):
 
     x_test = x_test[index_test[0:n_testing_samples], :]
     y_test = y_test[index_test[0:n_testing_samples], :]
+    #flatten data for fc-N
+    x_train = x_train.reshape(x_train.shape[0],-1)
+    x_test = x_test.reshape(x_test.shape[0],-1)
 
     # Normalize data
     x_train = x_train / 255.

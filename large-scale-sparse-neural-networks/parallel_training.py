@@ -117,6 +117,7 @@ if __name__ == '__main__':
     class_weights = None
     config_file = args.config_file
     activations = args.activations
+    start_epoch_importancepruning = args.start_epoch_importancepruning
     print(config_file)
     print(args)
 
