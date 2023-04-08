@@ -710,7 +710,7 @@ class MPIMaster(MPIProcess):
 
                                 t6 = datetime.datetime.now()
                                 self.logger.info(f"Weights evolution time  {t6 - t5}")
-                                self.evolution_time += (t6 - t5).seconds
+                                self.evolution_time += (t6 - t5) #.seconds remove .seconds, because it rounds down?
                                 self.weights = self.model.get_weights()
 
                                 # save weights after every so many timesteps
