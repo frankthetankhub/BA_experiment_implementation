@@ -15,16 +15,16 @@ for FILE in configs/*;
     cwd="/home/student/j/jankettler/scratch/Ba/large-scale-sparse-neural-networks"
     #cmd_alt="mpiexec -n 6 $sas $cwd/parallel_training.py $ARGS --config_file $base_name"
     cmd="mpiexec -n 6 pdm run python parallel_training.py $ARGS --config_file $base_name"
-    cluster_cmd="qsub -b y -V -l mem=8G -cwd -pe default 6"
+    cluster_cmd="qsub -b y -V -l mem=8G,$host_commands -cwd -pe default 6"
     cluster_cmd_cifar="qsub -b y -V -l mem=14G,$host_commands -cwd -pe default 6"
     echo $cmd
     if [[ $base_name == cifar* ]];
     then
         echo cifar10
-        for SEED in {1..2}; do echo $cluster_cmd_cifar $cmd --seed $SEED; done
-        for SEED in {1..2}; do $cluster_cmd_cifar $cmd --seed $SEED; done
+        for SEED in {1..1}; do echo $cluster_cmd_cifar $cmd --seed $SEED; done
+        for SEED in {1..1}; do $cluster_cmd_cifar $cmd --seed $SEED; done
     else
-        for SEED in {1..2}; do echo $cluster_cmd -N ${base_name}_seed$SEED $cmd --seed $SEED; done
-        for SEED in {1..2}; do $cluster_cmd -N ${base_name}_seed$SEED $cmd --seed $SEED; done
+        for SEED in {1..1}; do echo $cluster_cmd -N ${base_name}_seed$SEED $cmd --seed $SEED; done
+        for SEED in {1..1}; do $cluster_cmd -N ${base_name}_seed$SEED $cmd --seed $SEED; done
     fi
 done 
