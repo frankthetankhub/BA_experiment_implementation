@@ -20,7 +20,7 @@ for FILE in configs/*;
     cluster_cmd="qsub -q $queue -b y -V -l mem=8G -cwd -pe default 6"
     cluster_cmd_cifar="qsub -q $queue -b y -V -l mem=20G -cwd -pe default 6"
     echo $cmd
-    if [[ $base_name == cifar10_large* ]];
+    if [[ $base_name == cifar10* ]];
     then
         echo cifar10
         for SEED in {1..5}; do echo $cluster_cmd_cifar -N ${base_name}_seed$SEED $cmd --seed $SEED; done
