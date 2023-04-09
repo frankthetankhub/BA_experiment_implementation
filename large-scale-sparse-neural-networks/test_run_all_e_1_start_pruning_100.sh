@@ -1,7 +1,9 @@
 # This is the runfile for not submitting jobs
 
 # TODO include copying of config file into the relevant folder
-for FILE in configs/*; 
+echo please first specify a dataset to use <searches configs> and then an Host to run on
+echo $1, $2
+for FILE in configs/$1/*; 
     do echo $FILE; 
     full_name=$FILE
     base_name=$(basename ${full_name})

@@ -1,7 +1,9 @@
 # This is the runfile for not submitting jobs
 
 # TODO include copying of config file into the relevant folder
-for FILE in configs/*; 
+echo please first specify a dataset to use <searches configs> and then an Host to run on
+echo $1, $2
+for FILE in configs/$1/*; 
     do echo $FILE; 
     full_name=$FILE
     base_name=$(basename ${full_name})
@@ -17,8 +19,8 @@ for FILE in configs/*;
     cwd="/home/student/j/jankettler/scratch/Ba/large-scale-sparse-neural-networks"
     #cmd_alt="mpiexec -n 6 $sas $cwd/parallel_training.py $ARGS --config_file $base_name"
     cmd="mpiexec -n 6 pdm run python parallel_training.py $ARGS $EXP_SETUP_ARGS --config_file $base_name"
-    cluster_cmd="qsub -q $queue -b y -V -l mem=8G -cwd -pe default 6"
-    cluster_cmd_cifar="qsub -q $queue -b y -V -l mem=20G -cwd -pe default 6"
+    cluster_cmd="qsub -b y -V -l mem=8G,h=$2 -cwd -pe default 6"
+    cluster_cmd_cifar="qsub -b y -V -l mem=20G,h=$2 -cwd -pe default 6"
     echo $cmd
     if [[ $base_name == cifar10* ]];
     then
