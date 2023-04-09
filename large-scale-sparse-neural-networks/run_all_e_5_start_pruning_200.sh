@@ -26,9 +26,9 @@ for FILE in configs/$1/*;
     then
         echo cifar10
         for SEED in {1..5}; do echo $cluster_cmd_cifar -N ${base_name}_seed$SEED $cmd --seed $SEED; done
-        #for SEED in {1..5}; do $cluster_cmd_cifar -N ${base_name}_seed$SEED $cmd --seed $SEED; done
+        for SEED in {1..5}; do $cluster_cmd_cifar -N ${base_name}_seed$SEED $cmd --seed $SEED; done
     else
         for SEED in {1..5}; do echo $cluster_cmd -N ${base_name}_seed$SEED $cmd --seed $SEED; done
-        #for SEED in {1..5}; do $cluster_cmd -N ${base_name}_seed$SEED $cmd --seed $SEED; done
+        for SEED in {1..5}; do $cluster_cmd -N ${base_name}_seed$SEED $cmd --seed $SEED; done
     fi
 done
