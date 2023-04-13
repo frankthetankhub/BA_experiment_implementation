@@ -136,6 +136,12 @@ class SETMPIModel(object):
         self.num_workers = config['num_workers']
         self.momentum_correction = 1.
         try:
+            self.importance_pruning_frequency = config["importance_pruning_frequency"]
+        except Exception as e:
+            print(e)
+            print("setting importance_pruning_frequency to 20")
+            self.importance_pruning_frequency = 20
+        try:
             self.start_epoch_importancepruning = config["start_epoch_importancepruning"]
         except Exception as e:
             print(e)
@@ -345,7 +351,7 @@ class SETMPIModel(object):
             # uncomment line below to stop evolution of dense weights more than 80% non-zeros
             # if self.w[i].count_nonzero() / (self.w[i].get_shape()[0]*self.w[i].get_shape()[1]) < 0.8:
 
-            if self.prune and not worker and (epoch % 20 == 0 and epoch > self.start_epoch_importancepruning): #200 wichtige stelle da hier das importance pruning ausgeführt wird 
+            if self.prune and not worker and (epoch % self.importance_pruning_frequency== 0 and epoch > self.start_epoch_importancepruning): #200 wichtige stelle da hier das importance pruning ausgeführt wird 
                 print("start importance pruning")
                 sum_incoming_weights = np.abs(self.w[i]).sum(axis=0)
                 t = np.percentile(sum_incoming_weights, 10)

@@ -92,7 +92,8 @@ if __name__ == '__main__':
                                                              '"madelon",  or "mnist"')
     parser.add_argument('--activations', type=float, default=None, action="append", help='The α value (slope) of AlternateLeftRelu. Length should match with length of n-neurons')
 
-    parser.add_argument('--start_epoch_importancepruning', type=int, default=200, help='The epoch at which importance pruning will be part of the weight evolution. Importance pruning will only be done every %20 epochs.')
+    parser.add_argument('--start_epoch_importancepruning', type=int, default=200, help='The epoch at which importance pruning will be part of the weight evolution. How often Importance pruning will be done is specified in importance_pruning_frequency.')
+    parser.add_argument('--importance_pruning_frequency', type=int, default=20, help='The frequency in epochs that Importance Pruning should be done .defaults to every %20 epochs.')
     parser.add_argument('--save_weight_interval', type=int, default=20, help='After how many epochs weights should be saved. Defaults to saving every 20 epochs')
 
     args = parser.parse_args()
@@ -118,6 +119,7 @@ if __name__ == '__main__':
     config_file = args.config_file
     activations = args.activations
     start_epoch_importancepruning = args.start_epoch_importancepruning
+    importance_pruning_frequency = args.self.importance_pruning_frequency
     print(config_file)
     print(args)
 
@@ -254,7 +256,8 @@ if __name__ == '__main__':
         'loss': loss,
         'weight_init': weight_init,
         'prune': prune,
-        'num_workers': num_workers
+        'num_workers': num_workers,
+        'importance_pruning_frequency': importance_pruning_frequency
     }
 
     # Some input arguments may be ignored depending on chosen algorithm
