@@ -204,7 +204,7 @@ if __name__ == '__main__':
         base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+ "/" + config_file + "/" + "imp_pruning_start_" + str(start_epoch_importancepruning) + "/" + "seed_" + str(args.seed) + "/" + str(args.epochs) + "_epochs_e" + \
                         str(epsilon) + "_num_workers_" + str(num_workers) #start_of_trial
     else:
-        base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+ "/" + config_file + "/" + start_of_trial + "/" + str(args.epochs) + "_epochs_e" + \
+        base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+ "/" + start_of_trial + "/" + str(args.epochs) + "_epochs_e" + \
                         str(epsilon) + "_rand" + str(args.seed) + "_num_workers_" + str(num_workers)
     log_file = base_file_name + "_logs_execution.txt"
 

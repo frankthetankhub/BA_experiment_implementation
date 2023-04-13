@@ -391,6 +391,7 @@ class MPIWorker(MPIProcess):
 
                 if epoch > self.num_epochs * 0.7:
                     self.algo.sync_every = self.num_epochs * 0.3
+                    self.logger.info(f"Finishing epoch {epoch}, start with model evolution now. That evolution should include importance pruning")
                     self.model.weight_evolution(epoch)
                 else:
                     self.algo.sync_every = 1

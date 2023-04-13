@@ -346,6 +346,7 @@ class SETMPIModel(object):
             # if self.w[i].count_nonzero() / (self.w[i].get_shape()[0]*self.w[i].get_shape()[1]) < 0.8:
 
             if self.prune and not worker and (epoch % 20 == 0 and epoch > self.start_epoch_importancepruning): #200 wichtige stelle da hier das importance pruning ausgeführt wird 
+                print("start importance pruning")
                 sum_incoming_weights = np.abs(self.w[i]).sum(axis=0)
                 t = np.percentile(sum_incoming_weights, 10)
                 sum_incoming_weights = np.where(sum_incoming_weights <= t, 0, sum_incoming_weights)
@@ -358,6 +359,7 @@ class SETMPIModel(object):
 
                 self.w[i] = weights.tocsr()
                 self.pdw[i] = pdw.tocsr()
+                print("end importance pruning")
 
             # converting to COO form - Added by Amar
             wcoo = self.w[i].tocoo()
