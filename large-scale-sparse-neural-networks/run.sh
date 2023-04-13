@@ -1,12 +1,33 @@
 # This is the runfile for not submitting jobs
-ARGS="--monitor --epochs 241 --dataset cifar10 --n-neurons 784 --n-neurons 1000 --n-neurons 1000 --n-neurons 1000 --n-neurons 10"
-echo "Seed: $1"
-sas="/net/projects/scratch/summer/valid_until_31_January_2024/jankettler/pdm_venvs/large-scale-sparse-neural-networks-yLgfzVYs-3.7/bin/python"
-p="/scratch/pdm_venvs/large-scale-sparse-neural-networks-yLgfzVYs-3.7/bin/python3.7"
-python="/net/projects/scratch/summer/valid_until_31_January_2024/jankettler/python/Python-3.7.16/python"
-cwd="/home/student/j/jankettler/scratch/Ba/large-scale-sparse-neural-networks"
-cmd="python parallel_training.py $ARGS --seed 1"
-cmd2="mpiexec -n 6 pdm run python parallel_training.py $ARGS --seed 1"
-mpi_loc="/home/student/j/jankettler/scratch/openmpi/bin/mpiexec"
-echo $cmd2
-qsub -b y -V -l mem=8G,cuda=1 -cwd -pe default 6 $cmd2
+
+# TODO include copying of config file into the relevant folder
+echo please first specify a dataset to use <searches configs> and then an Host to run on
+echo $1, $2
+for FILE in configs/$1/*;  
+    do echo $FILE; 
+    full_name=$FILE
+    base_name=$(basename ${full_name})
+    echo ${base_name}
+    #|rigel.cv.uni-osnabrueck.de |cujam.cv.uni-osnabrueck.de
+    cv_hosts='(albireo.cv.uni-osnabrueck.de|alioth.cv.uni-osnabrueck.de|beam.cv.uni-osnabrueck.de|bias.cv.uni-osnabrueck.de|dimension.cv.uni-osnabrueck.de|gremium.cv.uni-osnabrueck.de|light.cv.uni-osnabrueck.de|nashira.cv.uni-osnabrueck.de|perception.cv.uni-osnabrueck.de|shadow.cv.uni-osnabrueck.de|twilight.cv.uni-osnabrueck.de|vector.cv.uni-osnabrueck.de|voxel.cv.uni-osnabrueck.de)'
+    ARGS=$(cat $FILE)
+    EXP_SETUP_ARGS="--epsilon 1 --start_epoch_importancepruning 100"
+    #sas="/net/projects/scratch/summer/valid_until_31_January_2024/jankettler/pdm_venvs/large-scale-sparse-neural-networks-yLgfzVYs-3.7/bin/python"
+    #p="/scratch/pdm_venvs/large-scale-sparse-neural-networks-yLgfzVYs-3.7/bin/python3.7"
+    #python="/net/projects/scratch/summer/valid_until_31_January_2024/jankettler/python/Python-3.7.16/python"
+    cwd="/home/student/j/jankettler/scratch/Ba/large-scale-sparse-neural-networks"
+    #cmd_alt="mpiexec -n 6 $sas $cwd/parallel_training.py $ARGS --config_file $base_name"
+    cmd="mpiexec -n 4 pdm run python parallel_training.py $ARGS $EXP_SETUP_ARGS --config_file $base_name"
+    cluster_cmd="qsub -b y -V -l mem=8G,h=$2 -cwd -pe default 6"
+    cluster_cmd_cifar="qsub -b y -V -l mem=20G,h=$2 -cwd -pe default 6"
+    echo $cmd
+    if [[ $base_name == cifar10* ]];
+    then
+        echo cifar10
+        for SEED in {1..5}; do echo $cluster_cmd_cifar -N ${base_name}_seed$SEED $cmd --seed $SEED; done
+        for SEED in {1..5}; do $cluster_cmd_cifar -N ${base_name}_seed$SEED $cmd --seed $SEED; done
+    else
+        for SEED in {1..5}; do echo $cluster_cmd -N ${base_name}_seed$SEED $cmd --seed $SEED; done
+        for SEED in {1..5}; do $cluster_cmd -N ${base_name}_seed$SEED $cmd --seed $SEED; done
+    fi
+done
