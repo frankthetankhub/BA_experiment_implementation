@@ -312,6 +312,7 @@ class MPIWorker(MPIProcess):
                  num_epochs=10, monitor=False, save_filename=None):
         """Raises an exception if no parent rank is provided. Sets the number of epochs
             using the argument provided, then calls the parent constructor"""
+        print("inializing Worker")
         info = "Creating MPIWorker with rank {0} and parent rank {1} on a communicator of size {2}"
         tell_comm = parent_comm if parent_comm is not None else process_comm
         if tell_comm: logging.info(info.format(tell_comm.Get_rank(),
@@ -449,6 +450,7 @@ class MPIMaster(MPIProcess):
                  save_weight_interval = 10, n_layers = 4):
         """Parameters:
               child_comm: MPI communicator used to contact children"""
+        print("inializing Master")
         if child_comm is None:
             raise Error("MPIMaster initialized without child communicator")
         self.child_comm = child_comm
