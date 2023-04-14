@@ -358,6 +358,7 @@ class MPIWorker(MPIProcess):
             tmp = self.model.train_on_batch(x=x_b, y=y_b)
 
             if self.algo.sync_every > 1 or epoch > self.num_epochs * 0.7:
+                print("worker applies update on model")
                 self.model.apply_update(tmp)
             else:
                 self.update = tmp

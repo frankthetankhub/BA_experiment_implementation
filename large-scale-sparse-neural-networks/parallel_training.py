@@ -257,6 +257,7 @@ if __name__ == '__main__':
         'weight_init': weight_init,
         'prune': prune,
         'num_workers': num_workers,
+        'start_epoch_importancepruning': start_epoch_importancepruning,
         'importance_pruning_frequency': importance_pruning_frequency
     }
 
