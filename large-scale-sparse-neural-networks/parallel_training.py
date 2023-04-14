@@ -119,7 +119,7 @@ if __name__ == '__main__':
     config_file = args.config_file
     activations = args.activations
     start_epoch_importancepruning = args.start_epoch_importancepruning
-    importance_pruning_frequency = args.self.importance_pruning_frequency
+    importance_pruning_frequency = args.importance_pruning_frequency
     print(config_file)
     print(args)
 
