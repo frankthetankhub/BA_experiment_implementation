@@ -203,7 +203,7 @@ if __name__ == '__main__':
 
     # evtl noch einbauen, dass start_of_trial etc nur gemacht wird wenn rank=0 damit nicht zu viele ordner erstellt werden.
     if config_file:
-        base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+ "/" + config_file + "/" + "seed_" + str(args.seed) + "/"  + "imp_pruning_start_" + str(start_epoch_importancepruning) + str(args.epochs) + "_epochs_e" + \
+        base_file_name = "results/s_m_p/" + config_file + "/" + "seed_" + str(args.seed) + "/"  + "imp_pruning_start_" + str(start_epoch_importancepruning) + str(args.epochs) + "_epochs_e" + \
                         str(epsilon) + "_num_workers_" + str(num_workers) + "_prunefreq_" + str(importance_pruning_frequency) #start_of_trial
     else:
         base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+ "/" + start_of_trial + "/" + str(args.epochs) + "_epochs_e" + \
