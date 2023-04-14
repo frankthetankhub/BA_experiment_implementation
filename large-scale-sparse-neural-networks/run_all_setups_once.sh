@@ -32,11 +32,11 @@ for FILE in configs/*/*;
             if [[ $base_name == cifar10* ]];
             then
                 echo cifar10
-                echo $cluster_cmd_cifar -N ${base_name}_seed$SEED $cmd --seed $SEED
-                #$cluster_cmd_cifar -N ${base_name}_seed$SEED $cmd --seed $SEED
+                echo $cluster_cmd_cifar -N ${CONF_FILE_SAVE_PARAMETER}_seed$SEED $cmd --seed $SEED
+                $cluster_cmd_cifar -N ${CONF_FILE_SAVE_PARAMETER}_seed$SEED $cmd --seed $SEED
             else
-                echo $cluster_cmd -N ${base_name}_seed$SEED $cmd --seed $SEED
-                #$cluster_cmd -N ${base_name}_seed$SEED $cmd --seed $SEED
+                echo $cluster_cmd -N ${CONF_FILE_SAVE_PARAMETER}_seed$SEED $cmd --seed $SEED
+                $cluster_cmd -N ${CONF_FILE_SAVE_PARAMETER}_seed$SEED $cmd --seed $SEED
             fi
         fi
     done
