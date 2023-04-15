@@ -12,10 +12,7 @@ for FILE in configs/$1/*;
     host_commands="h=albireo,h=alioth,h=beam,h=biash,h=cujam,h=dimension,h=gremium,h=light,h=nashira,h=perception,h=rigel,h=shadow,h=twilight,h=vector,h=voxel"
     queue="cv.q"
     ARGS=$(cat $FILE)
-    EXP_SETUP_ARGS="--epsilon 20 --start_epoch_importancepruning 100"
-    #sas="/net/projects/scratch/summer/valid_until_31_January_2024/jankettler/pdm_venvs/large-scale-sparse-neural-networks-yLgfzVYs-3.7/bin/python"
-    #p="/scratch/pdm_venvs/large-scale-sparse-neural-networks-yLgfzVYs-3.7/bin/python3.7"
-    #python="/net/projects/scratch/summer/valid_until_31_January_2024/jankettler/python/Python-3.7.16/python"
+    EXP_SETUP_ARGS="--epsilon 20 --start_epoch_importancepruning 100"   
     cwd="/home/student/j/jankettler/scratch/Ba/large-scale-sparse-neural-networks"
     #cmd_alt="mpiexec -n 6 $sas $cwd/parallel_training.py $ARGS --config_file $base_name"
     cmd="mpiexec -n 6 pdm run python parallel_training.py $ARGS $EXP_SETUP_ARGS --config_file $base_name"
