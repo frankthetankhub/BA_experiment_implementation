@@ -24,8 +24,7 @@ from time import perf_counter
 # Custom Libraries
 import utils
 
-# Tensorboard initialization
-writer = SummaryWriter()
+
 
 # Plotting Style
 sns.set_style('darkgrid')
@@ -42,7 +41,19 @@ def main(args, ITE=0):
     reinit = True if args.prune_type=="reinit" else False
     min_acc_delta = args.min_acc_delta
     patience = args.patience
-
+    start_of_run = datetime.now().strftime("%d_%m_%H_%M")
+    base_path = f"{os.getcwd()}/results"
+    if args.config_file:
+        base_path = base_path +"/"+ args.config_file 
+    else:
+        base_path = base_path +"/"+ "no_conf_file"
+    save_path_dumps = f"{base_path}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_run}/"
+    #utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_run}/")
+    torch.save(model, f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_run}/initial_state_dict_{args.prune_type}.pth.tar")
+    utils.checkdir(save_path_dumps)
+    
+    # Tensorboard initialization
+    writer = SummaryWriter(log_dir = f"{base_path}/runs")
     set_seed(args.seed)
 
     # Data Loader
@@ -79,24 +90,6 @@ def main(args, ITE=0):
     
     # Importing Network Architecture
     global model
-    # not needed as we will only focus on fully connected networks
-    # if args.arch_type == "fc1":
-    #    model = fc1.fc1().to(device)
-    # elif args.arch_type == "lenet5":
-    #     model = LeNet5.LeNet5().to(device)
-    # elif args.arch_type == "alexnet":
-    #     model = AlexNet.AlexNet().to(device)
-    # elif args.arch_type == "vgg16":
-    #     model = vgg.vgg16().to(device)  
-    # elif args.arch_type == "resnet18":
-    #     model = resnet.resnet18().to(device)   
-    # elif args.arch_type == "densenet121":
-    #     model = densenet.densenet121().to(device)   
-    
-    # # If you want to add extra model paste here
-    # else:
-    #     print("\nWrong Model choice\n")
-    #     exit()
     models = ['mnist_small', 'mnist_medium', ' mnist_large', 'cifar_small', 'cifar_medium', 'cifar_large']
     if args.arch_size not in models:
         print(f"Invalid model/size choice: {args.arch_size}, please select one of the following: {models}")
@@ -108,10 +101,10 @@ def main(args, ITE=0):
         model.apply(weight_init)
 
         # Copying and Saving Initial State
-        start_of_trial = datetime.now().strftime("%d_%m_%H_%M")
+        
         initial_state_dict = copy.deepcopy(model.state_dict())
-        utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_trial}/")
-        torch.save(model, f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_trial}/initial_state_dict_{args.prune_type}.pth.tar")
+        #utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_run}/")
+        torch.save(model, f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_run}/initial_state_dict_{args.prune_type}.pth.tar")
 
         # Making Initial Mask
         make_mask(model)
@@ -174,8 +167,8 @@ def main(args, ITE=0):
                     accuracy_diff = accuracy - best_accuracy 
                     if accuracy_diff > min_acc_delta:
                         best_accuracy = accuracy
-                        utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/")
-                        torch.save(model,f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_trial}/{_ite}_model_{args.prune_type}.pth.tar")
+                        #utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/")
+                        torch.save(model,f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_run}/{_ite}_model_{args.prune_type}.pth.tar")
                         # if accuracy_diff > min_acc_delta:
                         early_stopping = 0
                     else:
@@ -217,18 +210,18 @@ def main(args, ITE=0):
             plt.ylabel("Loss and Accuracy") 
             plt.legend() 
             plt.grid(color="gray") 
-            utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/")
-            plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/{args.prune_type}_LossVsAccuracy_{comp1}.png", dpi=1200) 
+            utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_run}/")
+            plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_run}/{args.prune_type}_LossVsAccuracy_{comp1}.png", dpi=1200) 
             plt.close()
 
             # Dump Plot values
-            utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/")
-            all_loss.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/{args.prune_type}_all_loss_{comp1}.dat")
-            all_accuracy.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/{args.prune_type}_all_accuracy_{comp1}.dat")
+            #utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_run}/")
+            all_loss.dump(f"{save_path_dumps}{args.prune_type}_all_loss_{comp1}.dat")
+            all_accuracy.dump(f"{save_path_dumps}{args.prune_type}_all_accuracy_{comp1}.dat")
             
             # Dumping mask
-            utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/")
-            with open(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/{args.prune_type}_mask_{comp1}.pkl", 'wb') as fp:
+            #utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_run}/")
+            with open(f"{save_path_dumps}{args.prune_type}_mask_{comp1}.pkl", 'wb') as fp:
                 pickle.dump(mask, fp)
             
             # Making variables into 0
@@ -237,9 +230,9 @@ def main(args, ITE=0):
             all_accuracy = np.zeros(args.end_iter,float)
 
         # Dumping Values for Plotting
-        utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/")
-        comp.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/{args.prune_type}_compression.dat")
-        bestacc.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/{args.prune_type}_bestaccuracy.dat")
+        #utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_run}/")
+        comp.dump(f"{save_path_dumps}{args.prune_type}_compression.dat")
+        bestacc.dump(f"{save_path_dumps}{args.prune_type}_bestaccuracy.dat")
 
         # Plotting
         a = np.arange(args.prune_iterations)
@@ -251,8 +244,8 @@ def main(args, ITE=0):
         plt.ylim(0,100)
         plt.legend() 
         plt.grid(color="gray") 
-        utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/")
-        plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_trial}/{args.prune_type}_AccuracyVsWeights.png", dpi=1200) 
+        utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_run}/")
+        plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_run}/{args.prune_type}_AccuracyVsWeights.png", dpi=1200) 
         plt.close()                    
    
 # Function for Training
@@ -445,9 +438,10 @@ if __name__=="__main__":
     parser.add_argument("--patience", default=2, type=int, help="How many times acc < best_acc befor early-stopping Trainin. Defaults to allowing lower validation acc 2 times before stopping.")
     parser.add_argument("--seed", default=1, type=int, help="The seed to use for random pruning.")
     parser.add_argument("--arch_size", default="mnist_small", type=str, help="mnist_small | mnist_medium | mnist_large | cifar_small | cifar_medium | cifar_large")
+    parser.add_argument("--config_file", default=None, type=str, help="The name of the file, where the experimental hyperparameters are from.")
 
 
-    
+
 
     args = parser.parse_args()
 
