@@ -33,7 +33,7 @@ class MPISingleWorker(MPIWorker):
             logging.info("beginning epoch {:d}".format(self.epoch + epoch))
             if self.monitor:
                 self.monitor.start_monitor()
-
+            start_train = datetime.datetime.now()
             for j in range(self.data.x_train.shape[0] // self.data.batch_size):#wichtige stelle hier startet der trainingsprocess für single_process bzw parallel training
                 start_pos = j * self.data.batch_size
                 end_pos = (j + 1) * self.data.batch_size
@@ -41,7 +41,7 @@ class MPISingleWorker(MPIWorker):
                 self.update = self.model.train_on_batch(x=batch[0], y=batch[1])
 
                 self.model.apply_update(self.update)
-
+            end_train = datetime.datetime.now()
             if self.monitor:
                 self.monitor.stop_monitor()
 
@@ -57,7 +57,7 @@ class MPISingleWorker(MPIWorker):
                 metrics[epoch-1, 1] = loss_test
                 metrics[epoch-1, 2] = accuracy_train
                 metrics[epoch-1, 3] = accuracy_test
-                self.logger.info(f"Testing time: {t4 - t3}\n; Loss train: {loss_train}; Loss test: {loss_test}; \n"
+                self.logger.info(f"Testing time: {t4 - t3}\n; Training time: {start_train-end_train}\n; Loss train: {loss_train}; Loss test: {loss_test}; \n"
                                  f"Accuracy train: {accuracy_train}; Accuracy test: {accuracy_test}; \n"
                                  f"Maximum accuracy test: {self.maximum_accuracy}")
                 # save performance metrics values in a file
