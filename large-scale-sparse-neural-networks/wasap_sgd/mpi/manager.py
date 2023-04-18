@@ -193,7 +193,8 @@ class MPIManager(object):
                                            model=self.model,
                                            num_epochs=self.num_epochs,
                                            monitor=self.monitor,
-                                           save_filename=self.save_filename)
+                                           save_filename=self.save_filename,
+                                           save_weight_interval=self.save_weight_interval)
 
     def train(self):
         if self.parent_rank is None:

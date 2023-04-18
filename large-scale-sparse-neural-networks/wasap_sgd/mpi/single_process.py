@@ -7,10 +7,11 @@ import json
 
 class MPISingleWorker(MPIWorker):
     """This class trains its model with no communication to other processes"""
-    def __init__(self, num_epochs, data, algo, model,monitor, save_filename):
+    def __init__(self, num_epochs, data, algo, model,monitor, save_filename, save_weight_interval=20):
 
         self.has_parent = False
         self.best_val_loss = None
+        self.save_weight_interval = save_weight_interval
 
         super(MPISingleWorker, self).__init__(data, algo, model, process_comm=None, parent_comm=None,
                                               parent_rank=None, num_epochs=num_epochs, monitor=monitor,
@@ -24,6 +25,10 @@ class MPISingleWorker(MPIWorker):
 
         self.maximum_accuracy = 0
         metrics = np.zeros((self.num_epochs, 4))
+
+        #save model weight init
+        np.savez_compressed(self.save_filename + "_initial_weights.npz", self.model.get_weights()['w'])
+        np.savez_compressed(self.save_filename + "_initial_biases.npz", self.model.get_weights()['b'])
         for epoch in range(1, self.num_epochs + 1):
             logging.info("beginning epoch {:d}".format(self.epoch + epoch))
             if self.monitor:
@@ -62,8 +67,9 @@ class MPISingleWorker(MPIWorker):
             if self.stop_training:
                 break
 
-            weights.append(self.model.get_weights()['w'])
-            biases.append(self.model.get_weights()['b']) #wichtige stelle da hier potentiell das saven von weights etc angebracht ist
+            if epoch % self.save_weight_interval == 0:
+                weights.append(self.model.get_weights()['w'])
+                biases.append(self.model.get_weights()['b']) #wichtige stelle da hier potentiell das saven von weights etc angebracht ist
             if epoch < self.num_epochs - 1:  # do not change connectivity pattern after the last epoch
                 self.model.weight_evolution(epoch) #wichtige stelle da hier weight evolution durchgeführt wird
                 self.weights = self.model.get_weights()
