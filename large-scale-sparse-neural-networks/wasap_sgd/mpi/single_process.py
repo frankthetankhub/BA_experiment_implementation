@@ -68,8 +68,8 @@ class MPISingleWorker(MPIWorker):
                 break
 
             if epoch % self.save_weight_interval == 0:
-                weights.append(self.model.get_weights()['w'])
-                biases.append(self.model.get_weights()['b']) #wichtige stelle da hier potentiell das saven von weights etc angebracht ist
+                weights.append(self.model.get_weights()['w'].copy())
+                biases.append(self.model.get_weights()['b'].copy()) #wichtige stelle da hier potentiell das saven von weights etc angebracht ist
             if epoch < self.num_epochs - 1:  # do not change connectivity pattern after the last epoch
                 self.model.weight_evolution(epoch) #wichtige stelle da hier weight evolution durchgeführt wird
                 self.weights = self.model.get_weights()
