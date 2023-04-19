@@ -714,7 +714,7 @@ class MPIMaster(MPIProcess):
 
                                 t6 = datetime.datetime.now()
                                 self.logger.info(f"Weights evolution time  {t6 - t5}")
-                                self.evolution_time += (t6 - t5).seconds #remove .seconds, because it rounds down? throws error if removed
+                                self.evolution_time += (t6 - t5).total_seconds() #remove .seconds, because it rounds down? throws error if removed
                                 self.weights = self.model.get_weights()
 
                                 # save weights after every so many timesteps
@@ -842,7 +842,7 @@ class MPIMaster(MPIProcess):
                           f" Accuracy test: {accuracy_test}; \n"
                           f"Maximum accuracy val: {self.best_val_acc}")
 
-        self.validate_time += (t4 - t3).seconds
+        self.validate_time += (t4 - t3).total_seconds()
 
         self.logger.debug("Ending validation")
         return None

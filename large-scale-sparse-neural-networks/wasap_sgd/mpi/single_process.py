@@ -42,6 +42,7 @@ class MPISingleWorker(MPIWorker):
 
                 self.model.apply_update(self.update)
             end_train = datetime.datetime.now()
+            trainig_time = (end_train - start_train).total_seconds()
             if self.monitor:
                 self.monitor.stop_monitor()
 
@@ -57,9 +58,11 @@ class MPISingleWorker(MPIWorker):
                 metrics[epoch-1, 1] = loss_test
                 metrics[epoch-1, 2] = accuracy_train
                 metrics[epoch-1, 3] = accuracy_test
-                self.logger.info(f"Testing time: {t4 - t3}\n; Training time: {start_train-end_train}\n; Loss train: {loss_train}; Loss test: {loss_test}; \n"
+                testing_time = (t4 - t3)
+                self.logger.info(f"Testing time: {testing_time}\n; Training time: {trainig_time}\n; Loss train: {loss_train}; Loss test: {loss_test}; \n"
                                  f"Accuracy train: {accuracy_train}; Accuracy test: {accuracy_test}; \n"
                                  f"Maximum accuracy test: {self.maximum_accuracy}")
+                self.validate_time += testing_time.total_seconds()
                 # save performance metrics values in a file
                 if self.save_filename != "":
                     np.savetxt(self.save_filename + ".txt", metrics)
