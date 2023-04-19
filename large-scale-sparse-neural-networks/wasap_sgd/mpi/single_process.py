@@ -58,11 +58,12 @@ class MPISingleWorker(MPIWorker):
                 metrics[epoch-1, 1] = loss_test
                 metrics[epoch-1, 2] = accuracy_train
                 metrics[epoch-1, 3] = accuracy_test
-                testing_time = (t4 - t3)
-                self.logger.info(f"Testing time: {testing_time}\n; Training time: {trainig_time}\n; Loss train: {loss_train}; Loss test: {loss_test}; \n"
+                testing_time = (t4 - t3).total_seconds()
+                self.logger.info(f"Training time: {trainig_time};")
+                self.logger.info(f"Testing time: {testing_time};\nLoss train: {loss_train}; Loss test: {loss_test}; \n"
                                  f"Accuracy train: {accuracy_train}; Accuracy test: {accuracy_test}; \n"
                                  f"Maximum accuracy test: {self.maximum_accuracy}")
-                self.validate_time += testing_time.total_seconds()
+                self.validate_time += testing_time
                 # save performance metrics values in a file
                 if self.save_filename != "":
                     np.savetxt(self.save_filename + ".txt", metrics)
@@ -73,9 +74,14 @@ class MPISingleWorker(MPIWorker):
             if epoch % self.save_weight_interval == 0:
                 weights.append(self.model.get_weights()['w'].copy())
                 biases.append(self.model.get_weights()['b'].copy()) #wichtige stelle da hier potentiell das saven von weights etc angebracht ist
+            
             if epoch < self.num_epochs - 1:  # do not change connectivity pattern after the last epoch
+                start_evolution = datetime.datetime.now()
                 self.model.weight_evolution(epoch) #wichtige stelle da hier weight evolution durchgeführt wird
                 self.weights = self.model.get_weights()
+                evolution_time = (datetime.datetime.now()- start_evolution).total_seconds()
+                self.logger.info(f"Weights evolution time  {evolution_time}")
+                self.evolution_time += evolution_time
 
         logging.info("Signing off")
         np.savez_compressed(self.save_filename + "_weights.npz", *weights)
@@ -93,6 +99,7 @@ class MPISingleWorker(MPIWorker):
         self.maximum_accuracy = max(self.maximum_accuracy, accuracy_test)
         loss_test = self.model.compute_loss(self.data.y_test, activations_test)
         loss_train = self.model.compute_loss(self.data.y_train, activations_train)
-        self.logger.info(f"Testing time: {t4 - t3}\n; Loss train: {loss_train}; Loss test: {loss_test}; \n"
+        t_5 = (t4-t3).total_seconds()
+        self.logger.info(f"Testing time: {t_5}; \nLoss train: {loss_train}; Loss test: {loss_test}; \n"
                          f"Accuracy train: {accuracy_train}; Accuracy test: {accuracy_test}; \n"
                          f"Maximum accuracy test: {self.maximum_accuracy}")
