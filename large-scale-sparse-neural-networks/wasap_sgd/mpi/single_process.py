@@ -30,6 +30,7 @@ class MPISingleWorker(MPIWorker):
         np.savez_compressed(self.save_filename + "_initial_weights.npz", self.model.get_weights()['w'])
         np.savez_compressed(self.save_filename + "_initial_biases.npz", self.model.get_weights()['b'])
         batches_per_epoch = self.data.get_train_data().shape[0] // self.data.batch_size
+        best_model = None
         for epoch in range(1, self.num_epochs + 1):
             logging.info("beginning epoch {:d}".format(self.epoch + epoch))
             if self.monitor:
@@ -58,7 +59,11 @@ class MPISingleWorker(MPIWorker):
                 # accuracy_test, activations_test = self.model.predict(self.data.x_test, self.data.y_test)
                 # accuracy_train, activations_train = self.model.predict(self.data.x_train, self.data.y_train)
                 t4 = datetime.datetime.now()
-                self.maximum_accuracy = max(self.maximum_accuracy, accuracy_test)
+                if accuracy_test > self.maximum_accuracy:
+                    best_model_weights = self.model.get_weights()['w'].copy()
+                    best_model_biases = self.model.get_weights()['b'].copy()
+                    self.maximum_accuracy = accuracy_test
+                #self.maximum_accuracy = max(self.maximum_accuracy, accuracy_test)
                 # loss_test = self.model.compute_loss(self.data.y_test, activations_test)
                 # loss_train = self.model.compute_loss(self.data.y_train, activations_train)
                 loss_test = self.model.compute_loss(self.data.get_test_labels(), activations_test)
@@ -94,6 +99,8 @@ class MPISingleWorker(MPIWorker):
         logging.info("Signing off")
         np.savez_compressed(self.save_filename + "_weights.npz", *weights)
         np.savez_compressed(self.save_filename + "_biases.npz", *biases)
+        np.savez_compressed(self.save_filename + "_bestmodel_weights.npz", best_model_weights)
+        np.savez_compressed(self.save_filename + "_bestmodel_biases.npz", best_model_biases)
 
         if self.save_filename != "" and self.monitor:
             with open(self.save_filename + "_monitor.json", 'w') as file:
