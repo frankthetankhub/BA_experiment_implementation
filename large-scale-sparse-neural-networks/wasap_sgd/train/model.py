@@ -351,7 +351,7 @@ class SETMPIModel(object):
             # uncomment line below to stop evolution of dense weights more than 80% non-zeros
             # if self.w[i].count_nonzero() / (self.w[i].get_shape()[0]*self.w[i].get_shape()[1]) < 0.8:
 
-            if self.prune and not worker and (epoch % self.importance_pruning_frequency== 0 and epoch > self.start_epoch_importancepruning): #200 wichtige stelle da hier das importance pruning ausgeführt wird 
+            if self.prune and not worker and (epoch % self.importance_pruning_frequency== 0 and epoch >= self.start_epoch_importancepruning): #200 wichtige stelle da hier das importance pruning ausgeführt wird 
                 print("start importance pruning")
                 sum_incoming_weights = np.abs(self.w[i]).sum(axis=0)
                 t = np.percentile(sum_incoming_weights, 10)
@@ -390,6 +390,10 @@ class SETMPIModel(object):
             vals_w_new = vals_w[(vals_w > smallest_positive) | (vals_w < largest_negative)]
             rows_w_new = rows_w[(vals_w > smallest_positive) | (vals_w < largest_negative)]
             cols_w_new = cols_w[(vals_w > smallest_positive) | (vals_w < largest_negative)]
+
+            logging.info(f"largest negative value, everything closer to 0 and itself will be removed from weights: {largest_negative}")
+            logging.info(f"smalles positive value, everything closer to 0 and itself will be removed from weights: {smallest_positive}")
+            logging.info(f"in layer {i}, {vals_w.size - vals_w_new.size} connections are removed in the evolutionary regrowing cycle. Percent that survived: {vals_w_new.size/vals_w.size}")
 
             new_w_row_col_index = np.stack((rows_w_new, cols_w_new), axis=-1)
             old_pd_row_col_index = np.stack((rows_pd, cols_pd), axis=-1)
