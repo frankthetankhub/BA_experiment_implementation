@@ -13,8 +13,8 @@ for FILE in configs/*/*;
     full_name=$FILE
     base_name=$(basename ${full_name})
     echo ${base_name}
-    #|rigel.cv.uni-osnabrueck.de |cujam.cv.uni-osnabrueck.de
-    CV_HOSTS='(albireo.cv.uni-osnabrueck.de|alioth.cv.uni-osnabrueck.de|beam.cv.uni-osnabrueck.de|bias.cv.uni-osnabrueck.de|dimension.cv.uni-osnabrueck.de|gremium.cv.uni-osnabrueck.de|light.cv.uni-osnabrueck.de|nashira.cv.uni-osnabrueck.de|perception.cv.uni-osnabrueck.de|shadow.cv.uni-osnabrueck.de|twilight.cv.uni-osnabrueck.de|vector.cv.uni-osnabrueck.de|voxel.cv.uni-osnabrueck.de)'
+    #|rigel.cv.uni-osnabrueck.de |cujam.cv.uni-osnabrueck.de beam.cv.uni-osnabrueck.de|
+    CV_HOSTS='(albireo.cv.uni-osnabrueck.de|alioth.cv.uni-osnabrueck.de|bias.cv.uni-osnabrueck.de|dimension.cv.uni-osnabrueck.de|gremium.cv.uni-osnabrueck.de|light.cv.uni-osnabrueck.de|nashira.cv.uni-osnabrueck.de|perception.cv.uni-osnabrueck.de|shadow.cv.uni-osnabrueck.de|twilight.cv.uni-osnabrueck.de|vector.cv.uni-osnabrueck.de|voxel.cv.uni-osnabrueck.de)'
     ARGS=$(cat $FILE)
     echo $EXP_SETUP_ARGS
     cluster_cmd="qsub -b y -V -l mem=1G,h=$CV_HOSTS -cwd"
