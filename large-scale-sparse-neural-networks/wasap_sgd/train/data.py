@@ -37,6 +37,7 @@ class Data(object):
                 horizontal_flip=True,  # randomly flip images
                 vertical_flip=False)  # randomly flip images
             self.datagen.fit(self.x_train)
+            self.output_generator = self.datagen.flow(self.x_train, self.y_train, batch_size=self.batch_size)
         else:
             self.datagen = None
 
@@ -55,9 +56,8 @@ class Data(object):
 
     def generate_augmented_data(self):
         """Yields batches of augmented training data until none are left."""
-        output_generator = self.datagen.flow(self.x_train, self.y_train, batch_size=self.batch_size)
         for j in range(self.x_train.shape[0] // self.batch_size):
-            x_b, y_b = next(output_generator)
+            x_b, y_b = next(self.output_generator)
             x_b = x_b.reshape(-1, 32 * 32 * 3)
 
             yield x_b, y_b
