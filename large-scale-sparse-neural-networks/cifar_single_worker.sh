@@ -8,7 +8,7 @@ if [[ $# -eq 0 ]] ; then
 fi
 SEED=$1
 echo $SEED
-for FILE in configs/cifar10/*;
+for FILE in configs/cifar/*;
     do echo $FILE; 
     full_name=$FILE
     base_name=$(basename ${full_name})
