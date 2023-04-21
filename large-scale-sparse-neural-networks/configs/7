@@ -1,1 +1,1 @@
---epsilon 5 --start_epoch_importancepruning 150 --importance_pruning_frequency 20
+--epsilon 5 --start_epoch_importancepruning 140 --importance_pruning_frequency 20
