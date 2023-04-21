@@ -24,7 +24,8 @@ class MPISingleWorker(MPIWorker):
         biases = []
 
         self.maximum_accuracy = 0
-        metrics = np.zeros((self.num_epochs, 4))
+        #include training per epoch time as metric
+        metrics = np.zeros((self.num_epochs, 5))
 
         #save model weight init
         np.savez_compressed(self.save_filename + "_initial_weights.npz", self.model.get_weights()['w'])
@@ -72,6 +73,7 @@ class MPISingleWorker(MPIWorker):
                 metrics[epoch-1, 1] = loss_test
                 metrics[epoch-1, 2] = accuracy_train
                 metrics[epoch-1, 3] = accuracy_test
+                metrics[epoch-1, 4] = training_time
                 testing_time = (t4 - t3).total_seconds()
                 self.logger.info(f"Training time: {training_time};")
                 self.logger.info(f"Testing time: {testing_time}; \nLoss train: {loss_train}; Loss test: {loss_test}; \n"
