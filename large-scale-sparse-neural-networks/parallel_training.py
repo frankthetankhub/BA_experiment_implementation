@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--start_epoch_importancepruning', type=int, default=200, help='The epoch at which importance pruning will be part of the weight evolution. How often Importance pruning will be done is specified in importance_pruning_frequency.')
     parser.add_argument('--importance_pruning_frequency', type=int, default=20, help='The frequency in epochs that Importance Pruning should be done .defaults to every %20 epochs.')
-    parser.add_argument('--save_weight_interval', type=int, default=20, help='After how many epochs weights should be saved. Defaults to saving every 20 epochs')
+    parser.add_argument('--save_weight_interval', type=int, default=40, help='After how many epochs weights should be saved. Defaults to saving every 20 epochs')
 
     args = parser.parse_args()
 

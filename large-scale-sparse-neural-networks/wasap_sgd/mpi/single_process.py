@@ -47,7 +47,7 @@ class MPISingleWorker(MPIWorker):
                     break
             
             end_train = datetime.datetime.now()
-            trainig_time = (end_train - start_train).total_seconds()
+            training_time = (end_train - start_train).total_seconds()
 
             if self.monitor:
                 self.monitor.stop_monitor()
@@ -73,7 +73,7 @@ class MPISingleWorker(MPIWorker):
                 metrics[epoch-1, 2] = accuracy_train
                 metrics[epoch-1, 3] = accuracy_test
                 testing_time = (t4 - t3).total_seconds()
-                self.logger.info(f"Training time: {trainig_time};")
+                self.logger.info(f"Training time: {training_time};")
                 self.logger.info(f"Testing time: {testing_time}; \nLoss train: {loss_train}; Loss test: {loss_test}; \n"
                                  f"Accuracy train: {accuracy_train}; Accuracy test: {accuracy_test}; \n"
                                  f"Maximum accuracy test: {self.maximum_accuracy}")
