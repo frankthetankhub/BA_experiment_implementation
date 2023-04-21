@@ -18,7 +18,7 @@ for FILE in configs/*/*;
     ARGS=$(cat $FILE)
     echo $EXP_SETUP_ARGS
     cluster_cmd="qsub -b y -V -l mem=1G,h=$CV_HOSTS -cwd"
-    cluster_cmd_cifar="qsub -b y -V -l mem=10G,h=$CV_HOSTS -cwd"
+    cluster_cmd_cifar="qsub -b y -V -l mem=5,h=$CV_HOSTS -cwd"
     for CONF in configs/*; 
         do
         #test if it is an experimental setup file or a folder containing configs
