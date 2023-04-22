@@ -208,7 +208,7 @@ def main(args, ITE=0):
                 writer.add_scalar("Early stopping Epoch per Pruning iteration",args.end_iter, _ite)
             time_per_train_prune_iteration = (perf_counter() - start_of_pruning_iteration)
             time_per_ite[_ite]=time_per_train_prune_iteration
-            writer.add_scalar('best accuracy reached in run', best_accuracy, comp1) #'Accuracy/test'
+            writer.add_scalar('best accuracy reached in run', best_accuracy, _ite) #'Accuracy/test'
             writer.add_scalar("Time per Pruning-Training Iteration", time_per_train_prune_iteration, _ite)
             print(f"Time per Pruning-Training Iteration: {time_per_train_prune_iteration} in pruning iteration:{_ite}")
             bestacc[_ite]=best_accuracy
