@@ -110,7 +110,6 @@ def main(args, ITE=0):
         # Copying and Saving Initial State
         
         initial_state_dict = copy.deepcopy(model.state_dict())
-        #utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_run}/")
         torch.save(model, f"{save_path_saves}initial_state_dict_{args.prune_type}.pth.tar")
 
         # Making Initial Mask
@@ -142,7 +141,6 @@ def main(args, ITE=0):
         for _ite in range(args.start_iter, ITERATION):
             start_of_pruning_iteration = perf_counter()
             if not _ite == 0:
-                start_of_pruning = perf_counter()
                 prune_by_percentile(args.prune_percent, resample=resample, reinit=reinit)
                 if reinit:
                     model.apply(weight_init)
@@ -156,7 +154,7 @@ def main(args, ITE=0):
                 else:
                     original_initialization(mask, initial_state_dict)
                 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
-                time_for_pruning = perf_counter() - start_of_pruning
+                time_for_pruning = perf_counter() - start_of_pruning_iteration
                 writer.add_scalar("Time taken for Pruning and Weight Initialization", time_for_pruning, _ite)
                 time_per_pruning[_ite] = time_for_pruning
             print(f"\n--- Pruning Level [{ITE}:{_ite}/{ITERATION}]: ---")
@@ -179,13 +177,12 @@ def main(args, ITE=0):
                     accuracy_diff = accuracy - best_accuracy 
                     if accuracy_diff > min_acc_delta:
                         best_accuracy = accuracy
-                        #utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/")
                         torch.save(model,f"{save_path_saves}{_ite}_model_{args.prune_type}.pth.tar")
-                        # if accuracy_diff > min_acc_delta:
                         early_stopping = 0
                     else:
                         early_stopping +=1
                         if early_stopping > patience:
+                            print("----------------------------------Early stopping now at Pruning level:{_ite}/{ITERATION} and Epoch: {iter_} ----------------------------------")
                             early_stopping=0
                             has_stopped=True
                             writer.add_scalar("Early stopping Epoch per Pruning iteration",iter_, _ite)
@@ -206,7 +203,7 @@ def main(args, ITE=0):
                     pbar.set_description(
                         f'Train Epoch: {iter_}/{args.end_iter} Loss: {loss:.6f} Accuracy: {accuracy:.2f}% Best Accuracy: {best_accuracy:.2f}%')       
 
-                #writer.add_scalar("accuracy per epoch", )
+                writer.add_scalar("accuracy per epoch", accuracy, iter_)
             if not has_stopped:
                 writer.add_scalar("Early stopping Epoch per Pruning iteration",args.end_iter, _ite)
             time_per_train_prune_iteration = (perf_counter() - start_of_pruning_iteration)
@@ -232,12 +229,10 @@ def main(args, ITE=0):
             plt.close()
 
             # Dump Plot values
-            #utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_run}/")
             all_loss.dump(f"{save_path_dumps}{args.prune_type}_all_loss_{comp1}.dat")
             all_accuracy.dump(f"{save_path_dumps}{args.prune_type}_all_accuracy_{comp1}.dat")
             
             # Dumping mask
-            #utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_run}/")
             with open(f"{save_path_dumps}{args.prune_type}_mask_{comp1}.pkl", 'wb') as fp:
                 pickle.dump(mask, fp)
             
@@ -247,7 +242,6 @@ def main(args, ITE=0):
             all_accuracy = np.zeros(args.end_iter,float)
 
         # Dumping Values for Plotting
-        #utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_run}/")
         comp.dump(f"{save_path_dumps}{args.prune_type}_compression.dat")
         bestacc.dump(f"{save_path_dumps}{args.prune_type}_bestaccuracy.dat")
         time_per_train_epoch.dump(f"{save_path_dumps}{args.prune_type}_training_times.dat")
@@ -264,7 +258,6 @@ def main(args, ITE=0):
         plt.ylim(0,100)
         plt.legend() 
         plt.grid(color="gray") 
-        #utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_run}/")
         plt.savefig(f"{save_path_plots}{args.prune_type}_AccuracyVsWeights.png", dpi=1200) 
         plt.close()                    
    
