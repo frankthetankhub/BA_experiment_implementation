@@ -43,7 +43,7 @@ def main(args, ITE=0):
     patience = args.patience
     start_of_run = datetime.now().strftime("%d_%m_%H_%M")
     print(f"Start of Run: {start_of_run}")
-    models = ['mnist_small', 'mnist_medium', ' mnist_large', 'cifar_small', 'cifar_medium', 'cifar_large']
+    models = ['mnist_small', 'mnist_medium', 'mnist_large', 'cifar_small', 'cifar_medium', 'cifar_large']
     if args.arch_size not in models:
         print(f"Invalid model/size choice: {args.arch_size}, please select one of the following: {models}")
         exit()
