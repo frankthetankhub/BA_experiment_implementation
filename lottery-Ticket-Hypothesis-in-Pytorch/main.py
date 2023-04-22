@@ -222,7 +222,7 @@ def main(args, ITE=0):
             #NOTE Normalized the accuracy to [0,100] for ease of plotting.
             plt.plot(np.arange(1,(args.end_iter)+1), 100*(all_loss - np.min(all_loss))/np.ptp(all_loss).astype(float), c="blue", label="Loss") 
             plt.plot(np.arange(1,(args.end_iter)+1), all_accuracy, c="red", label="Accuracy") 
-            plt.title(f"Loss Vs Accuracy Vs Iterations ({args.dataset},{args.arch_type})") 
+            plt.title(f"Loss Vs Accuracy Vs Iterations ({args.dataset},{args.config_file})") 
             plt.xlabel("Iterations") 
             plt.ylabel("Loss and Accuracy") 
             plt.legend() 
@@ -257,14 +257,14 @@ def main(args, ITE=0):
         # Plotting
         a = np.arange(args.prune_iterations)
         plt.plot(a, bestacc, c="blue", label="Winning tickets") 
-        plt.title(f"Test Accuracy vs Unpruned Weights Percentage ({args.dataset},{args.arch_type})") 
+        plt.title(f"Test Accuracy vs Unpruned Weights Percentage ({args.dataset},{args.config_file})") 
         plt.xlabel("Unpruned Weights Percentage") 
         plt.ylabel("test accuracy") 
         plt.xticks(a, comp, rotation ="vertical") 
         plt.ylim(0,100)
         plt.legend() 
         plt.grid(color="gray") 
-        utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_run}/")
+        #utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_run}/")
         plt.savefig(f"{save_path_plots}{args.prune_type}_AccuracyVsWeights.png", dpi=1200) 
         plt.close()                    
    
