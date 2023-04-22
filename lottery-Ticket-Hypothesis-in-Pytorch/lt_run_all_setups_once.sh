@@ -1,4 +1,3 @@
-echo please first specify a dataset to use <searches configs> # and then an experimental hyperparameter configuration
 if [[ $# -eq 0 ]] ; then
     echo 'Please specify a seed to use for all experimental setups'
     exit 0
@@ -28,7 +27,7 @@ for FILE in configs/dataset_size/*;
     #CONF_FILE_SAVE_PARAMETER="$base_conf_name/$base_name"
     #EXP_SETUP_ARGS=$(cat $CONF)
     #cmd="mpiexec -n 4 pdm run python parallel_training.py $ARGS $EXP_SETUP_ARGS --config_file $CONF_FILE_SAVE_PARAMETER"
-    cmd="pdm run python main.py $ARGS --config_file $base_name
+    cmd="pdm run python main.py $ARGS --config_file $base_name"
     if [[ $base_name == cifar10* ]]; then
         echo cifar10
         echo $cluster_cmd_cifar -N ${base_name}_s$SEED $cmd --seed $SEED
