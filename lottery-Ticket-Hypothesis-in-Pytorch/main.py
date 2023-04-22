@@ -52,7 +52,7 @@ def main(args, ITE=0):
         base_path = base_path +"/"+ args.config_file 
     else:
         base_path = base_path +"/"+ "no_conf_file"
-    base_path = base_path + "/" + args.seed
+    base_path = base_path + "/" + str(args.seed)
     save_path_dumps = f"{base_path}/dumps/" #{args.arch_type}/{args.dataset}/{start_of_run}/"
     save_path_saves = base_path +"/saves/"
     save_path_plots = base_path + "/plots/"
