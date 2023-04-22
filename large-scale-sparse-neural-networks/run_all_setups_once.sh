@@ -17,7 +17,7 @@ for FILE in configs/*/*;
     CV_HOSTS='(albireo.cv.uni-osnabrueck.de|alioth.cv.uni-osnabrueck.de|bias.cv.uni-osnabrueck.de|dimension.cv.uni-osnabrueck.de|gremium.cv.uni-osnabrueck.de|light.cv.uni-osnabrueck.de|nashira.cv.uni-osnabrueck.de|perception.cv.uni-osnabrueck.de|shadow.cv.uni-osnabrueck.de|twilight.cv.uni-osnabrueck.de|vector.cv.uni-osnabrueck.de|voxel.cv.uni-osnabrueck.de)'
     ARGS=$(cat $FILE)
     echo $EXP_SETUP_ARGS
-    cluster_cmd="qsub -b y -V -l mem=8G,h=$CV_HOSTS -cwd -pe default 4"
+    cluster_cmd="qsub -b y -V -l mem=4G,h=$CV_HOSTS -cwd -pe default 4"
     cluster_cmd_cifar="qsub -b y -V -l mem=14G,h=$CV_HOSTS -cwd -pe default 4"
     for CONF in configs/*; 
         do
