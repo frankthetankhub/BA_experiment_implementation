@@ -42,19 +42,30 @@ def main(args, ITE=0):
     min_acc_delta = args.min_acc_delta
     patience = args.patience
     start_of_run = datetime.now().strftime("%d_%m_%H_%M")
+    print(f"Start of Run: {start_of_run}")
+    models = ['mnist_small', 'mnist_medium', ' mnist_large', 'cifar_small', 'cifar_medium', 'cifar_large']
+    if args.arch_size not in models:
+        print(f"Invalid model/size choice: {args.arch_size}, please select one of the following: {models}")
+        exit()
     base_path = f"{os.getcwd()}/results"
     if args.config_file:
         base_path = base_path +"/"+ args.config_file 
     else:
         base_path = base_path +"/"+ "no_conf_file"
-    save_path_dumps = f"{base_path}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_run}/"
-    #utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_run}/")
-    torch.save(model, f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_run}/initial_state_dict_{args.prune_type}.pth.tar")
+    base_path = base_path + "/" + args.seed
+    save_path_dumps = f"{base_path}/dumps/" #{args.arch_type}/{args.dataset}/{start_of_run}/"
+    save_path_saves = base_path +"/saves/"
+    save_path_plots = base_path + "/plots/"
+    utils.checkdir(f"{save_path_plots}")
     utils.checkdir(save_path_dumps)
-    
+    utils.checkdir(save_path_saves)
     # Tensorboard initialization
     writer = SummaryWriter(log_dir = f"{base_path}/runs")
     set_seed(args.seed)
+
+    #save the arguments used in training as a file
+    with open(f'{base_path}/args.txt', 'w') as f:
+        f.write('\n'.join(sys.argv[1:]))
 
     # Data Loader
     transform=transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.1307,), (0.3081,))])
@@ -90,10 +101,6 @@ def main(args, ITE=0):
     
     # Importing Network Architecture
     global model
-    models = ['mnist_small', 'mnist_medium', ' mnist_large', 'cifar_small', 'cifar_medium', 'cifar_large']
-    if args.arch_size not in models:
-        print(f"Invalid model/size choice: {args.arch_size}, please select one of the following: {models}")
-        exit()
     from archs import fc1
     model = fc1.fc1(setup=args.arch_size).to(device)
     for _ in range(ITE):
@@ -104,7 +111,7 @@ def main(args, ITE=0):
         
         initial_state_dict = copy.deepcopy(model.state_dict())
         #utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_run}/")
-        torch.save(model, f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_run}/initial_state_dict_{args.prune_type}.pth.tar")
+        torch.save(model, f"{save_path_saves}initial_state_dict_{args.prune_type}.pth.tar")
 
         # Making Initial Mask
         make_mask(model)
@@ -127,6 +134,9 @@ def main(args, ITE=0):
         step = 0
         all_loss = np.zeros(args.end_iter,float)
         all_accuracy = np.zeros(args.end_iter,float)
+        time_per_ite = np.zeros(ITERATION,float)
+        time_per_pruning = np.zeros(ITERATION,float)
+        time_per_train_epoch = np.zeros(ITERATION,float)
 
         
         for _ite in range(args.start_iter, ITERATION):
@@ -134,8 +144,6 @@ def main(args, ITE=0):
             if not _ite == 0:
                 start_of_pruning = perf_counter()
                 prune_by_percentile(args.prune_percent, resample=resample, reinit=reinit)
-                time_for_pruning = perf_counter() - start_of_pruning
-                writer.add_scalar("Time taken for Pruning", time_for_pruning, _ite)
                 if reinit:
                     model.apply(weight_init)
                     step = 0
@@ -148,6 +156,9 @@ def main(args, ITE=0):
                 else:
                     original_initialization(mask, initial_state_dict)
                 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
+                time_for_pruning = perf_counter() - start_of_pruning
+                writer.add_scalar("Time taken for Pruning and Weight Initialization", time_for_pruning, _ite)
+                time_per_pruning[_ite] = time_for_pruning
             print(f"\n--- Pruning Level [{ITE}:{_ite}/{ITERATION}]: ---")
 
             # Print the table of Nonzeros in each layer
@@ -157,6 +168,7 @@ def main(args, ITE=0):
             pbar = tqdm(range(args.end_iter))
             early_stopping = 0
             has_stopped=False
+            training_times = []
             for iter_ in pbar:
 
                 # Frequency for Testing
@@ -168,7 +180,7 @@ def main(args, ITE=0):
                     if accuracy_diff > min_acc_delta:
                         best_accuracy = accuracy
                         #utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/")
-                        torch.save(model,f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{start_of_run}/{_ite}_model_{args.prune_type}.pth.tar")
+                        torch.save(model,f"{save_path_saves}{_ite}_model_{args.prune_type}.pth.tar")
                         # if accuracy_diff > min_acc_delta:
                         early_stopping = 0
                     else:
@@ -182,8 +194,10 @@ def main(args, ITE=0):
                 # Training
                 before_training = perf_counter()
                 loss = train(model, train_loader, optimizer, criterion)
-                training_time_per_epoch = perf_counter() - before_training
-                writer.add_scalar("training time per Training Epoch", training_time_per_epoch, iter_)
+                training_time = perf_counter() - before_training
+                writer.add_scalar("training time per Training Epoch", training_time, iter_)
+                print("training time per Training Epoch in Pruning iteration: {_ite}, and Epoch: {iter_} is: {training_time}")
+                training_times.append(training_time)
                 all_loss[iter_] = loss
                 all_accuracy[iter_] = accuracy
                 
@@ -195,10 +209,13 @@ def main(args, ITE=0):
                 #writer.add_scalar("accuracy per epoch", )
             if not has_stopped:
                 writer.add_scalar("Early stopping Epoch per Pruning iteration",args.end_iter, _ite)
-            time_per_pruning_iteration = perf_counter() - start_of_pruning_iteration
+            time_per_train_prune_iteration = (perf_counter() - start_of_pruning_iteration)
+            time_per_ite[_ite]=time_per_train_prune_iteration
             writer.add_scalar('best accuracy reached in run', best_accuracy, comp1) #'Accuracy/test'
-            writer.add_scalar("Time per Pruning Iteration", time_per_pruning_iteration, _ite)
+            writer.add_scalar("Time per Pruning-Training Iteration", time_per_train_prune_iteration, _ite)
+            print(f"Time per Pruning-Training Iteration: {time_per_train_prune_iteration} in pruning iteration:{_ite}")
             bestacc[_ite]=best_accuracy
+            time_per_train_epoch[_ite] = sum(training_times)/len(training_times)
 
             # Plotting Loss (Training), Accuracy (Testing), Iteration Curve
             #NOTE Loss is computed for every iteration while Accuracy is computed only for every {args.valid_freq} iterations. Therefore Accuracy saved is constant during the uncomputed iterations.
@@ -210,8 +227,8 @@ def main(args, ITE=0):
             plt.ylabel("Loss and Accuracy") 
             plt.legend() 
             plt.grid(color="gray") 
-            utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_run}/")
-            plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_run}/{args.prune_type}_LossVsAccuracy_{comp1}.png", dpi=1200) 
+            #utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_run}/")
+            plt.savefig(f"{save_path_plots}{args.prune_type}_LossVsAccuracy_{comp1}.png", dpi=1200) 
             plt.close()
 
             # Dump Plot values
@@ -233,6 +250,9 @@ def main(args, ITE=0):
         #utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{start_of_run}/")
         comp.dump(f"{save_path_dumps}{args.prune_type}_compression.dat")
         bestacc.dump(f"{save_path_dumps}{args.prune_type}_bestaccuracy.dat")
+        time_per_train_epoch.dump(f"{save_path_dumps}{args.prune_type}_training_times.dat")
+        time_per_ite.dump(f"{save_path_dumps}{args.prune_type}_whole_train_prune_time.dat")
+        time_per_pruning.dump(f"{save_path_dumps}{args.prune_type}_pruning_times.dat")
 
         # Plotting
         a = np.arange(args.prune_iterations)
@@ -245,7 +265,7 @@ def main(args, ITE=0):
         plt.legend() 
         plt.grid(color="gray") 
         utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_run}/")
-        plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{start_of_run}/{args.prune_type}_AccuracyVsWeights.png", dpi=1200) 
+        plt.savefig(f"{save_path_plots}{args.prune_type}_AccuracyVsWeights.png", dpi=1200) 
         plt.close()                    
    
 # Function for Training
@@ -421,7 +441,7 @@ if __name__=="__main__":
     # Arguement Parser
     parser = argparse.ArgumentParser()
     parser.add_argument("--lr",default= 1.2e-3, type=float, help="Learning rate")
-    parser.add_argument("--batch_size", default=60, type=int)
+    parser.add_argument("--batch_size", default=128, type=int) #60
     parser.add_argument("--start_iter", default=0, type=int)
     parser.add_argument("--end_iter", default=100, type=int)
     parser.add_argument("--print_freq", default=1, type=int)
@@ -456,4 +476,6 @@ if __name__=="__main__":
 
     # Looping Entire process
     #for i in range(0, 5):
+    start = perf_counter()
     main(args, ITE=trial_iterations)
+    print(f"whole execution finished in {perf_counter()-start} seconds")
