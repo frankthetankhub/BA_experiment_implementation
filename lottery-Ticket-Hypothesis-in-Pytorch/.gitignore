@@ -3,3 +3,6 @@
 /plots
 /runs
 /saves
+lt_cifar*
+lt_fmn*
+lt_mn*
