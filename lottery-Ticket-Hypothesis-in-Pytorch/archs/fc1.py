@@ -14,7 +14,7 @@ class fc1(nn.Module):
                 nn.Linear(1000, 1000),
                 nn.ReLU(inplace=True),
                 nn.Linear(1000, num_classes),
-                nn.Softmax(dim=0)
+                #nn.Softmax(dim=0)
             )
         elif setup == "mnist_medium":
             self.classifier = nn.Sequential(
@@ -25,7 +25,7 @@ class fc1(nn.Module):
                 nn.Linear(500, 500),
                 nn.ReLU(inplace=True),
                 nn.Linear(500, num_classes),
-                nn.Softmax(dim=0)
+                #nn.Softmax(dim=0)
             )
         elif setup == "mnist_small":
             self.classifier = nn.Sequential(
@@ -34,7 +34,7 @@ class fc1(nn.Module):
                 nn.Linear(300, 100),
                 nn.ReLU(inplace=True),
                 nn.Linear(100, num_classes),
-                nn.Softmax(dim=0)
+                #nn.Softmax(dim=0)
             )
         elif setup == "cifar_large":
             self.classifier = nn.Sequential(
@@ -45,7 +45,7 @@ class fc1(nn.Module):
                 nn.Linear(1000, 4000),
                 nn.ReLU(inplace=True),
                 nn.Linear(4000, num_classes),
-                nn.Softmax(dim=0)
+                #nn.Softmax(dim=0)
             )
         elif setup == "cifar_medium":
             self.classifier = nn.Sequential(
@@ -56,7 +56,7 @@ class fc1(nn.Module):
                 nn.Linear(1000, 2000),
                 nn.ReLU(inplace=True),
                 nn.Linear(2000, num_classes),
-                nn.Softmax(dim=0)
+                #nn.Softmax(dim=0)
             )
         elif setup == "cifar_small":
             self.classifier = nn.Sequential(
@@ -65,7 +65,7 @@ class fc1(nn.Module):
                 nn.Linear(300, 100),
                 nn.ReLU(inplace=True),
                 nn.Linear(100, num_classes),
-                nn.Softmax(dim=0)
+                #nn.Softmax(dim=0)
             )
         else:
             print("invalid setup choice for architecture")

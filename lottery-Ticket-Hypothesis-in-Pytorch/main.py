@@ -131,7 +131,8 @@ def main(args, ITE=0):
         comp = np.zeros(ITERATION,float)
         bestacc = np.zeros(ITERATION,float)
         step = 0
-        all_loss = np.zeros(args.end_iter,float)
+        all_train_loss = np.zeros(args.end_iter,float)
+        all_test_loss = np.zeros(args.end_iter, float)
         all_accuracy = np.zeros(args.end_iter,float)
         time_per_ite = np.zeros(ITERATION,float)
         time_per_pruning = np.zeros(ITERATION,float)
@@ -171,7 +172,8 @@ def main(args, ITE=0):
 
                 # Frequency for Testing
                 if iter_ % args.valid_freq == 0:
-                    accuracy = test(model, test_loader, criterion)
+                    accuracy, test_loss = test(model, test_loader, criterion)
+                    all_test_loss[iter_] = test_loss
 
                     # Save Weights
                     accuracy_diff = accuracy - best_accuracy 
@@ -182,7 +184,7 @@ def main(args, ITE=0):
                     else:
                         early_stopping +=1
                         if early_stopping > patience:
-                            print("----------------------------------Early stopping now at Pruning level:{_ite}/{ITERATION} and Epoch: {iter_} ----------------------------------")
+                            print(f"----------------------------------Early stopping now at Pruning level:{_ite}/{ITERATION} and Epoch: {iter_} ----------------------------------")
                             early_stopping=0
                             has_stopped=True
                             writer.add_scalar("Early stopping Epoch per Pruning iteration",iter_, _ite)
@@ -192,18 +194,20 @@ def main(args, ITE=0):
                 before_training = perf_counter()
                 loss = train(model, train_loader, optimizer, criterion)
                 training_time = perf_counter() - before_training
-                writer.add_scalar("training time per Training Epoch", training_time, iter_)
-                print("training time per Training Epoch in Pruning iteration: {_ite}, and Epoch: {iter_} is: {training_time}")
+                #writer.add_scalar("training time per Training Epoch", training_time, iter_)
+                if iter_%4==0:
+                    print(f"training time per Training Epoch in Pruning iteration: {_ite}, and Epoch: {iter_} is: {training_time}")
                 training_times.append(training_time)
-                all_loss[iter_] = loss
+                all_train_loss[iter_] = loss
                 all_accuracy[iter_] = accuracy
                 
                 # Frequency for Printing Accuracy and Loss
                 if iter_ % args.print_freq == 0:
                     pbar.set_description(
-                        f'Train Epoch: {iter_}/{args.end_iter} Loss: {loss:.6f} Accuracy: {accuracy:.2f}% Best Accuracy: {best_accuracy:.2f}%')       
+                        f'Train Epoch: {iter_}/{args.end_iter} Loss: {loss:.6f} Accuracy: {accuracy:.2f}% Best Accuracy: {best_accuracy:.2f}%')
+                    print(f'Train Epoch: {iter_}/{args.end_iter} Loss: {loss:.6f} Accuracy: {accuracy:.2f}% Best Accuracy: {best_accuracy:.2f}%')       
 
-                writer.add_scalar("accuracy per epoch", accuracy, iter_)
+                #writer.add_scalar("accuracy per epoch", accuracy, iter_)
             if not has_stopped:
                 writer.add_scalar("Early stopping Epoch per Pruning iteration",args.end_iter, _ite)
             time_per_train_prune_iteration = (perf_counter() - start_of_pruning_iteration)
@@ -211,13 +215,14 @@ def main(args, ITE=0):
             writer.add_scalar('best accuracy reached in run', best_accuracy, _ite) #'Accuracy/test'
             writer.add_scalar("Time per Pruning-Training Iteration", time_per_train_prune_iteration, _ite)
             print(f"Time per Pruning-Training Iteration: {time_per_train_prune_iteration} in pruning iteration:{_ite}")
+            print(f"Best_accuracy reached in iteration {_ite}: {best_accuracy}")
             bestacc[_ite]=best_accuracy
             time_per_train_epoch[_ite] = sum(training_times)/len(training_times)
 
             # Plotting Loss (Training), Accuracy (Testing), Iteration Curve
             #NOTE Loss is computed for every iteration while Accuracy is computed only for every {args.valid_freq} iterations. Therefore Accuracy saved is constant during the uncomputed iterations.
             #NOTE Normalized the accuracy to [0,100] for ease of plotting.
-            plt.plot(np.arange(1,(args.end_iter)+1), 100*(all_loss - np.min(all_loss))/np.ptp(all_loss).astype(float), c="blue", label="Loss") 
+            plt.plot(np.arange(1,(args.end_iter)+1), 100*(all_train_loss - np.min(all_train_loss))/np.ptp(all_train_loss).astype(float), c="blue", label="Loss") 
             plt.plot(np.arange(1,(args.end_iter)+1), all_accuracy, c="red", label="Accuracy") 
             plt.title(f"Loss Vs Accuracy Vs Iterations ({args.dataset},{args.config_file})") 
             plt.xlabel("Iterations") 
@@ -229,7 +234,8 @@ def main(args, ITE=0):
             plt.close()
 
             # Dump Plot values
-            all_loss.dump(f"{save_path_dumps}{args.prune_type}_all_loss_{comp1}.dat")
+            all_train_loss.dump(f"{save_path_dumps}{args.prune_type}_all_trainloss_{comp1}.dat")
+            all_test_loss.dump(f"{save_path_dumps}{args.prune_type}_all_testloss_{comp1}.dat")
             all_accuracy.dump(f"{save_path_dumps}{args.prune_type}_all_accuracy_{comp1}.dat")
             
             # Dumping mask
@@ -238,7 +244,8 @@ def main(args, ITE=0):
             
             # Making variables into 0
             best_accuracy = 0
-            all_loss = np.zeros(args.end_iter,float)
+            all_train_loss = np.zeros(args.end_iter,float)
+            all_test_loss = np.zeros(args.end_iter,float)
             all_accuracy = np.zeros(args.end_iter,float)
 
         # Dumping Values for Plotting
@@ -294,12 +301,13 @@ def test(model, test_loader, criterion):
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            test_loss += F.nll_loss(output, target, reduction='sum').item()  # sum up batch loss
+            #test_loss += F.nll_loss(output, target, reduction='sum').item()  # sum up batch loss
+            test_loss += criterion(output, target) #sum up batch loss
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).sum().item()
         test_loss /= len(test_loader.dataset)
         accuracy = 100. * correct / len(test_loader.dataset)
-    return accuracy
+    return accuracy, test_loss
 
 # Prune by Percentile module
 def prune_by_percentile(percent, resample=False, reinit=False,**kwargs):
