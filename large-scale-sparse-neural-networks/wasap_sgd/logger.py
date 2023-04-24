@@ -63,8 +63,8 @@ class MPIFileHandler(logging.FileHandler):
         if not folder_path.exists():
             if rank ==0:
                 Path(folder).mkdir(parents=True, exist_ok=False)
-            else:
-                print(f"this process is not rank 0 but instead {rank}")
+            # else:
+            #     print(f"this process is not rank 0 but instead {rank}")
             # with open(self.baseFilename, "a") as file:
             #             file.write("") #wichtige stell TODO
         stream = MPI.File.Open(self.comm, self.baseFilename, self.mode)
