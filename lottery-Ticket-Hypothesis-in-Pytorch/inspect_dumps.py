@@ -3,14 +3,22 @@ import sys
 import glob
 import os
 
+def search_folder(rootdir, extension):
+    file_list = []
+    for root, directories, file in os.walk(rootdir):
+        for file in file:
+            if(file.endswith(extension)):
+                file_list.append(file)
+    return file_list
+
 if __name__ == "__main__":
     if len(sys.argv) <2:
         print("please specify a folder")
     print(sys.argv)
     dir = os.getcwd() +"/"+ sys.argv[2]
     print(dir)
-    paths = glob.glob(sys.argv[1], root_dir=dir)
+    paths = search_folder(dir,sys.argv[1])
     print(paths)
     for p in paths:
         print(p)
-        print(np.load(path,allow_pickle=True))
+        print(np.load(p,allow_pickle=True))
