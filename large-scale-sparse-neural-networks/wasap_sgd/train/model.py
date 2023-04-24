@@ -352,7 +352,6 @@ class SETMPIModel(object):
             # if self.w[i].count_nonzero() / (self.w[i].get_shape()[0]*self.w[i].get_shape()[1]) < 0.8:
 
             if self.prune and not worker and (epoch % self.importance_pruning_frequency== 0 and epoch >= self.start_epoch_importancepruning): #200 wichtige stelle da hier das importance pruning ausgeführt wird 
-                print("start importance pruning")
                 sum_incoming_weights = np.abs(self.w[i]).sum(axis=0)
                 t = np.percentile(sum_incoming_weights, 10)
                 sum_incoming_weights = np.where(sum_incoming_weights <= t, 0, sum_incoming_weights)
@@ -365,7 +364,6 @@ class SETMPIModel(object):
 
                 self.w[i] = weights.tocsr()
                 self.pdw[i] = pdw.tocsr()
-                print("end importance pruning")
 
             # converting to COO form - Added by Amar
             wcoo = self.w[i].tocoo()
@@ -391,8 +389,7 @@ class SETMPIModel(object):
             rows_w_new = rows_w[(vals_w > smallest_positive) | (vals_w < largest_negative)]
             cols_w_new = cols_w[(vals_w > smallest_positive) | (vals_w < largest_negative)]
 
-            logging.info(f"largest negative value, everything closer to 0 and itself will be removed from weights: {largest_negative}")
-            logging.info(f"smalles positive value, everything closer to 0 and itself will be removed from weights: {smallest_positive}")
+            logging.info(f"largest negative value: {largest_negative}; smalles positive value: {smallest_positive} everything closer to 0 and itself will be removed from weights")
             logging.info(f"in layer {i}, {vals_w.size - vals_w_new.size} connections are removed in the evolutionary regrowing cycle. Percent that survived: {vals_w_new.size/vals_w.size}")
 
             new_w_row_col_index = np.stack((rows_w_new, cols_w_new), axis=-1)

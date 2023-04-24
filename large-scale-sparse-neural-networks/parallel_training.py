@@ -120,15 +120,24 @@ if __name__ == '__main__':
     activations = args.activations
     start_epoch_importancepruning = args.start_epoch_importancepruning
     importance_pruning_frequency = args.importance_pruning_frequency
-    print(config_file)
-    print(args)
 
-    # Comment this if you would like to use the full power of randomization. I use it to have repeatable results
+
     dimensions = n_hidden_neurons
     assert len(dimensions) == len(activations) , f"The amount of activation functions does not match the amount of layers; number of activation functions:{len(activations)} and values:{activations}, number of layers as specified in n-neurons:{len(dimensions)} , with values:{dimensions}"
+    comm = MPI.COMM_WORLD.Dup()
+    rank = comm.Get_rank()
+    num_processes = comm.Get_size()
+    num_workers = num_processes - 1
+    if rank == 0:
+        print(f"number of workers: {num_workers}")
+        print(config_file)
+        print(args)
+        print(f"dimensions: {dimensions}")
+        print(f"activations: {activations}")
+
+    # Comment this if you would like to use the full power of randomization. I use it to have repeatable results
     np.random.seed(args.seed)
-    print(f"dimensions: {dimensions}")
-    print(f"activations: {activations}")
+
     # Model architecture
     if args.dataset == 'fashionmnist' or args.dataset == 'mnist':
         # Model architecture mnist
@@ -182,18 +191,13 @@ if __name__ == '__main__':
     # for the final average sequence the non-zero weights are printed. Pass over the amount of Layers to print.
     n_layers = (len(dimensions)-1)
 
-    comm = MPI.COMM_WORLD.Dup()
 
     model_weights = None
-    rank = comm.Get_rank()
-    num_processes = comm.Get_size()
-    num_workers = num_processes - 1
 
     # Scale up the learning rate for synchronous training
     if args.synchronous:
         learning_rate = learning_rate * (num_workers)
 
-    print(f"number of workers: {num_workers}")
 
 
     # Initialize logger

@@ -60,7 +60,6 @@ class MPIManager(object):
             synchronous: true if masters should operate in synchronous mode
             monitor: whether to monitor per-process resource (CPU/GPU) usage
         """
-        print("inializing Manager")
         self.data = data
         self.algo = algo
         self.model = model
