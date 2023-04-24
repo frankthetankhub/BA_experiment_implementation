@@ -312,13 +312,15 @@ class MPIWorker(MPIProcess):
                  num_epochs=10, monitor=False, save_filename=None):
         """Raises an exception if no parent rank is provided. Sets the number of epochs
             using the argument provided, then calls the parent constructor"""
-        print("inializing Worker")
+        #print("inializing Worker")
         info = "Creating MPIWorker with rank {0} and parent rank {1} on a communicator of size {2}"
         tell_comm = parent_comm if parent_comm is not None else process_comm
         if tell_comm: logging.info(info.format(tell_comm.Get_rank(),
                                                parent_rank,
                                                tell_comm.Get_size()))
 
+        self.training_times = np.zeros((num_epochs+1, 1))
+        print(self.training_times)
         super(MPIWorker, self).__init__(parent_comm, process_comm, parent_rank,
                                         num_epochs=num_epochs, data=data, algo=algo, model=model,
                                         monitor=monitor, save_filename=save_filename)
@@ -347,6 +349,7 @@ class MPIWorker(MPIProcess):
         if self.monitor:
             self.monitor.start_monitor()
 
+        start_train = datetime.datetime.now()
         for x_b, y_b in self.data.generate_data():
             num_batches += 1
 
@@ -368,6 +371,9 @@ class MPIWorker(MPIProcess):
                 self.sync_with_parent()
 
             if num_batches % batches_per_epoch == 0:
+                train_time = (datetime.datetime.now() - start_train).total_seconds()
+                self.training_times[epoch][0] = train_time
+                
                 if self.monitor:
                     self.monitor.stop_monitor()
 
@@ -393,21 +399,35 @@ class MPIWorker(MPIProcess):
 
                 if epoch > self.num_epochs * 0.7:
                     self.algo.sync_every = self.num_epochs * 0.3
-                    self.logger.info(f"Finishing epoch {epoch}, start with model evolution now. That evolution should include importance pruning")
+                    self.logger.info(f"Finishing epoch {epoch}, now validate every is {self.algo.sync_every}; start with model evolution now.")
+                    if epoch % (self.num_epochs/10):
+                        self.logger.info(f"Worker starting validation after training epoch: {epoch}")
+                        t3 = datetime.datetime.now()
+                        accuracy_test, activations_test = self.model.predict(self.data.get_test_data(),
+                                                                            self.data.get_test_labels())
+                        t4 = datetime.datetime.now()
+                        loss_test = self.model.compute_loss(self.data.get_test_labels(), activations_test)
+                        self.logger.info("Validation metrics worker:")
+                        self.logger.info(f"Testing time: {t4 - t3}\n; Loss test: {loss_test}; \n"
+                                        f" Accuracy test: {accuracy_test}; \n")
                     self.model.weight_evolution(epoch)
                 else:
                     self.algo.sync_every = 1
-
-                self.logger.info(f"Finishing epoch {epoch}, now validate every is {self.algo.sync_every}")
+                    self.logger.info(f"Finishing epoch {epoch}, now validate every is {self.algo.sync_every}")
 
                 if self.monitor:
                     self.monitor.start_monitor()
+
+                #reset training time
+                start_train = datetime.datetime.now()
 
         self.logger.debug("Signing off")
         self.logger.info(f"Worker idle time: {self.idle_time}")
         if (self.monitor and self.save_filename != ""):
             with open(self.save_filename + "_monitor.json", 'w') as file:
                 file.write(json.dumps(self.monitor.get_stats(), indent=4, sort_keys=True, default=str))
+        if self.save_filename != "":
+            np.savetxt(self.save_filename + "training_times.txt", self.training_times)
 
         self.send_exit_to_parent()
 
@@ -450,7 +470,7 @@ class MPIMaster(MPIProcess):
                  save_weight_interval = 10, n_layers = 4):
         """Parameters:
               child_comm: MPI communicator used to contact children"""
-        print("inializing Master")
+        #print("inializing Master")
         if child_comm is None:
             raise Error("MPIMaster initialized without child communicator")
         self.child_comm = child_comm
@@ -748,7 +768,6 @@ class MPIMaster(MPIProcess):
         """
         source = status.Get_source()
         tag = self.lookup_mpi_tag(status.Get_tag(), inv=True)
-
         if tag == 'begin_update':
             self.do_update_sequence(source)
         elif tag == 'begin_weights':
@@ -793,6 +812,7 @@ class MPIMaster(MPIProcess):
             t2 = datetime.datetime.now()
             self.idle_time += (t2 - t1).total_seconds()
             self.process_message(status)
+            #print("---------------")
 
             if self.averaged == True:
                 self.shut_down_workers()
@@ -811,7 +831,7 @@ class MPIMaster(MPIProcess):
         # (this happens if the batch size does not divide the dataset size)
         if self.epoch < self.num_epochs:
             self.epoch += 1
-            self.validate()
+            #self.validate()
 
         self.send_exit_to_parent()
         self.stop_time = time.time()
@@ -832,14 +852,15 @@ class MPIMaster(MPIProcess):
         self.best_val_acc = max(self.best_val_acc, accuracy_test)
         loss_test = self.model.compute_loss(self.data.get_test_labels(), activations_test)
         loss_train = self.model.compute_loss(self.data.get_train_labels(), activations_train)
-        self.metrics[self.epoch-1, 0] = loss_train
-        self.metrics[self.epoch-1, 1] = loss_test
-        self.metrics[self.epoch-1, 2] = accuracy_train
-        self.metrics[self.epoch-1, 3] = accuracy_test
+        #print(f"loss_train dtype: {loss_train.dtype}; loss_test dtype: {loss_test.dtype}; accuracy_train dtype: {type(accuracy_train)};accuracy_test dtype: {type(accuracy_test)};")
+        self.metrics[self.epoch, 0] = loss_train
+        self.metrics[self.epoch, 1] = loss_test
+        self.metrics[self.epoch, 2] = accuracy_train
+        self.metrics[self.epoch, 3] = accuracy_test #self.epoch -1
 
         self.logger.info("Validation metrics:")
-        self.logger.info(f"Testing time: {t4 - t3}\n; Loss test: {loss_test}; \n"
-                          f" Accuracy test: {accuracy_test}; \n"
+        self.logger.info(f"Testing time: {t4 - t3}; \nLoss train: {loss_train}; Loss test: {loss_test}; \n"
+                          f"Accuracy train: {accuracy_train}; Accuracy test: {accuracy_test}; \n"
                           f"Maximum accuracy val: {self.best_val_acc}")
 
         self.validate_time += (t4 - t3).total_seconds()
