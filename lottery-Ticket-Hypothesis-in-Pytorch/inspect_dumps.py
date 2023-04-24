@@ -20,5 +20,6 @@ if __name__ == "__main__":
     paths = search_folder(dir,sys.argv[1])
     print(paths)
     for p in paths:
-        print(p)
-        print(np.load(p,allow_pickle=True))
+        pa = dir + p
+        print(pa)
+        print(np.load(pa,allow_pickle=True))
