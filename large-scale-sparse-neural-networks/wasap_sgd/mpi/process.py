@@ -320,7 +320,6 @@ class MPIWorker(MPIProcess):
                                                tell_comm.Get_size()))
 
         self.training_times = np.zeros((num_epochs+1, 1))
-        print(self.training_times)
         super(MPIWorker, self).__init__(parent_comm, process_comm, parent_rank,
                                         num_epochs=num_epochs, data=data, algo=algo, model=model,
                                         monitor=monitor, save_filename=save_filename)
