@@ -1,20 +1,24 @@
-import argparse
-import logging
-import tensorflow as tf
+#import argparse
+#import logging
+#import tensorflow as tf
+import sys
+print(sys.path)
+print(sys.version)
 from mpi4py import MPI
-from time import time
-from utils.load_data import *
-from utils.nn_functions import AlternatedLeftReLU, Softmax, Relu, Sigmoid
-from wasap_sgd.mpi.manager import MPIManager
-from wasap_sgd.train.algo import Algo
-from wasap_sgd.train.data import Data
-from wasap_sgd.train.model import SETMPIModel
-from wasap_sgd.logger import initialize_logger
 
-from datetime import datetime
+#from time import time
+#from utils.load_data import *
+#from utils.nn_functions import AlternatedLeftReLU, Softmax, Relu, Sigmoid
+#from wasap_sgd.mpi.manager import MPIManager
+#from wasap_sgd.train.algo import Algo
+#from wasap_sgd.train.data import Data
+#from wasap_sgd.train.model import SETMPIModel
+#from wasap_sgd.logger import initialize_logger
 
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+#from datetime import datetime
+
+#tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 # Run this file with "mpiexec -n 6 python parallel_training.py"
 # Add --synchronous if you want to train in synchronous mode
