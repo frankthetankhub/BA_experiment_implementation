@@ -27,7 +27,7 @@ for FILE in configs/more_patience/*;
     #CONF_FILE_SAVE_PARAMETER="$base_conf_name/$base_name"
     #EXP_SETUP_ARGS=$(cat $CONF)
     #cmd="mpiexec -n 4 pdm run python parallel_training.py $ARGS $EXP_SETUP_ARGS --config_file $CONF_FILE_SAVE_PARAMETER"
-    cmd="pdm run python main.py $ARGS --config_file $base_name"
+    cmd="pdm run python main.py $ARGS --config_file ${base_name}_50_patience"
     if [[ $base_name == lt_cifar10* ]]; then
         echo cifar10
         echo $cluster_cmd_cifar -N ${base_name}_s$SEED $cmd --seed $SEED
