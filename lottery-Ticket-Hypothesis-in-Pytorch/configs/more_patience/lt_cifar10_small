@@ -1,0 +1,1 @@
+--dataset cifar10 --end_iter 250 --prune_iterations 24 --prune_percent 20 --trial_iterations 1 --patience 50 --arch_size cifar_small
