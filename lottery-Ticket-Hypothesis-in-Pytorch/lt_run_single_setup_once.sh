@@ -17,7 +17,7 @@ CV_HOSTS='(albireo.cv.uni-osnabrueck.de|alioth.cv.uni-osnabrueck.de|bias.cv.uni-
 ARGS=$(cat $full_name)
 
 cluster_cmd="qsub -b y -V -l mem=3G,cuda=1,h=$CV_HOSTS -cwd"
-cluster_cmd_cifar="qsub -b y -V -l mem=5G,cuda=1,h=$CV_HOSTS -cwd"
+cluster_cmd_cifar="qsub -b y -V -l mem=6G,cuda=1,h=$CV_HOSTS -cwd"
 #for CONF in configs/*; 
     #do
     #test if it is an experimental setup file or a folder containing configs
