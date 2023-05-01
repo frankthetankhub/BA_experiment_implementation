@@ -81,7 +81,8 @@ if __name__ == '__main__':
                         help='It gives the percentage of unimportant connections which are removed and replaced with '
                              'random ones after every epoch(in [0..1])')
     parser.add_argument('--n-neurons', type=int, default=None,action="append", help='Number of neurons in the hidden layer')
-    parser.add_argument('--prune', default=True, help='Perform Importance Pruning', action='store_true')
+    parser.add_argument('--no-pruning', help='Set this flag to NOT perform Importance Pruning; if this namespace argument is false, no pruning will be performed, specifying this argument sets it to false', action='store_false')
+    parser.add_argument('--anneal_zeta', help='Set this flag to decrease the value of zeta over the course of training', action='store_true')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=10,
                         help='how many batches to wait before logging training status')
@@ -120,6 +121,7 @@ if __name__ == '__main__':
     activations = args.activations
     start_epoch_importancepruning = args.start_epoch_importancepruning
     importance_pruning_frequency = args.importance_pruning_frequency
+    anneal_zeta = args.anneal_zeta
 
 
     dimensions = n_hidden_neurons
@@ -212,6 +214,8 @@ if __name__ == '__main__':
     else:
         base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+ "/" + start_of_trial + "/" + str(args.epochs) + "_epochs_e" + \
                         str(epsilon) + "_rand" + str(args.seed) + "_num_workers_" + str(num_workers)
+    if anneal_zeta:
+        base_file_name = base_file_name + "_anneal_zeta"
     log_file = base_file_name + "_logs_execution.txt"
 
     save_filename = base_file_name + "_process_" + str(rank)
@@ -262,7 +266,8 @@ if __name__ == '__main__':
         'prune': prune,
         'num_workers': num_workers,
         'start_epoch_importancepruning': start_epoch_importancepruning,
-        'importance_pruning_frequency': importance_pruning_frequency
+        'importance_pruning_frequency': importance_pruning_frequency,
+        "anneal_zeta": anneal_zeta
     }
 
     # Some input arguments may be ignored depending on chosen algorithm

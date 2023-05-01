@@ -125,6 +125,7 @@ class SETMPIModel(object):
         self.weight_decay = config['weight_decay']
         self.epsilon = config['epsilon']  # control the sparsity level as discussed in the paper
         self.zeta = config['zeta']  # the fraction of the weights removed
+        self.anneal_zeta = config["anneal_zeta"]
         self.dropout_rate = config['dropout_rate']  # dropout rate
         self.dimensions = dimensions
         self.batch_size = config['batch_size']
@@ -345,8 +346,21 @@ class SETMPIModel(object):
         accuracy, activations = self.predict(x, y)
         return self.loss.loss(y, activations), accuracy
 
+    def get_reductionterm_epoch(self, epoch):
+        """
+        This is included to test whether reducing the amount of removed and newly added connections over the course of training has positive benefits.
+        This method returns a value, continously decreasing over the course of training. This value is used to multiple the hyperparameter zeta with, to slowly bring it to 0. 
+        """
+        reduction_term = max(0,((self.epochs-epoch)/self.epochs))
+        return reduction_term
+
     def weight_evolution(self, epoch, worker=False):
         # this represents the core of the SET procedure. It removes the weights closest to zero in each layer and add new random weights
+        if self.anneal_zeta:
+            reduction_term_for_epoch = self.get_reductionterm_epoch(epoch)
+            zeta = self.zeta * reduction_term_for_epoch
+        else:
+            zeta = self.zeta
         for i in range(1, self.n_layers - 1):
             # uncomment line below to stop evolution of dense weights more than 80% non-zeros
             # if self.w[i].count_nonzero() / (self.w[i].get_shape()[0]*self.w[i].get_shape()[1]) < 0.8:
@@ -380,9 +394,9 @@ class SETMPIModel(object):
             first_zero_pos = find_first_pos(values, 0)
             last_zero_pos = find_last_pos(values, 0)
 
-            largest_negative = values[int((1 - self.zeta) * first_zero_pos)]
+            largest_negative = values[int((1 - zeta) * first_zero_pos)]
             smallest_positive = values[
-                int(min(values.shape[0] - 1, last_zero_pos + self.zeta * (values.shape[0] - last_zero_pos)))]
+                int(min(values.shape[0] - 1, last_zero_pos + zeta * (values.shape[0] - last_zero_pos)))]
 
             # remove the weights (W) closest to zero and modify PD as well
             vals_w_new = vals_w[(vals_w > smallest_positive) | (vals_w < largest_negative)]

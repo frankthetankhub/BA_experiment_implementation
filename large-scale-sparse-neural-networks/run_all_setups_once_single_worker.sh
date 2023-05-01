@@ -1,7 +1,7 @@
 # This is the runfile for not submitting jobs
 
 # TODO include copying of config file into the relevant folder
-echo please first specify a dataset to use <searches configs> and then an experimental hyperparameter configuration
+echo please first specify a Seed to use #<searches configs> and then an experimental hyperparameter configuration
 if [[ $# -eq 0 ]] ; then
     echo 'Please specify a seed to use for all experimental setups'
     exit 0
