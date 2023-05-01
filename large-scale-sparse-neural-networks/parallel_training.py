@@ -82,7 +82,7 @@ if __name__ == '__main__':
                              'random ones after every epoch(in [0..1])')
     parser.add_argument('--n-neurons', type=int, default=None,action="append", help='Number of neurons in the hidden layer')
     parser.add_argument('--no-pruning', help='Set this flag to NOT perform Importance Pruning; if this namespace argument is false, no pruning will be performed, specifying this argument sets it to false', action='store_false')
-    parser.add_argument('--anneal_zeta', help='Set this flag to decrease the value of zeta over the course of training', action='store_true')
+    parser.add_argument('--anneal-zeta', help='Set this flag to decrease the value of zeta over the course of training', action='store_true')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=10,
                         help='how many batches to wait before logging training status')
@@ -210,7 +210,7 @@ if __name__ == '__main__':
     # evtl noch einbauen, dass start_of_trial etc nur gemacht wird wenn rank=0 damit nicht zu viele ordner erstellt werden.
     if config_file:
         base_file_name = "results/s_m_p/" + config_file + "/" + "seed_" + str(args.seed) + "/"  + "imp_pruning_start_" + str(start_epoch_importancepruning) + "_" + str(args.epochs) + "_epochs_e" + \
-                        str(epsilon) + "_num_workers_" + str(num_workers) + "_prunefreq_" + str(importance_pruning_frequency) #start_of_trial
+                        str(epsilon) + "_num_workers_" + str(num_workers)# + "_prunefreq_" + str(importance_pruning_frequency) #start_of_trial
     else:
         base_file_name = "results/set_mlp_parallel/" + str(args.dataset)+ "/" + start_of_trial + "/" + str(args.epochs) + "_epochs_e" + \
                         str(epsilon) + "_rand" + str(args.seed) + "_num_workers_" + str(num_workers)
