@@ -99,11 +99,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    
 
     # Default weight initialization technique
     weight_init = 'xavier'
-    prune = args.prune
+    prune = args.no_pruning
     n_hidden_neurons = args.n_neurons
     epsilon = args.epsilon
     zeta = args.zeta
@@ -136,6 +135,7 @@ if __name__ == '__main__':
         print(args)
         print(f"dimensions: {dimensions}")
         print(f"activations: {activations}")
+        print(f"Importance Pruning: {prune}")
 
     # Comment this if you would like to use the full power of randomization. I use it to have repeatable results
     np.random.seed(args.seed)

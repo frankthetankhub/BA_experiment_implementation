@@ -352,6 +352,7 @@ class SETMPIModel(object):
         This method returns a value, continously decreasing over the course of training. This value is used to multiple the hyperparameter zeta with, to slowly bring it to 0. 
         """
         reduction_term = max(0,((self.epochs-epoch)/self.epochs))
+        logging.info(f"Zeta is reduced to {reduction_term} of its original value, in epoch {epoch}")
         return reduction_term
 
     def weight_evolution(self, epoch, worker=False):
