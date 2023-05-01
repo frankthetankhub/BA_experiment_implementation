@@ -57,16 +57,11 @@ class MPISingleWorker(MPIWorker):
                 t3 = datetime.datetime.now()
                 accuracy_test, activations_test = self.model.predict(self.data.get_test_data(), self.data.get_test_labels())
                 accuracy_train, activations_train = self.model.predict(self.data.get_train_data(), self.data.get_train_labels())
-                # accuracy_test, activations_test = self.model.predict(self.data.x_test, self.data.y_test)
-                # accuracy_train, activations_train = self.model.predict(self.data.x_train, self.data.y_train)
                 t4 = datetime.datetime.now()
                 if accuracy_test > self.maximum_accuracy:
                     best_model_weights = self.model.get_weights()['w'].copy()
                     best_model_biases = self.model.get_weights()['b'].copy()
                     self.maximum_accuracy = accuracy_test
-                #self.maximum_accuracy = max(self.maximum_accuracy, accuracy_test)
-                # loss_test = self.model.compute_loss(self.data.y_test, activations_test)
-                # loss_train = self.model.compute_loss(self.data.y_train, activations_train)
                 loss_test = self.model.compute_loss(self.data.get_test_labels(), activations_test)
                 loss_train = self.model.compute_loss(self.data.get_train_labels(), activations_train)
                 metrics[epoch-1, 0] = loss_train
@@ -90,7 +85,7 @@ class MPISingleWorker(MPIWorker):
             if epoch % self.save_weight_interval == 0:
                 weights.append(self.model.get_weights()['w'].copy())
                 biases.append(self.model.get_weights()['b'].copy()) #wichtige stelle da hier potentiell das saven von weights etc angebracht ist
-            if epoch < self.num_epochs - 1:  # do not change connectivity pattern after the last epoch
+            if epoch < self.num_epochs:  # do not change connectivity pattern after the last epoch #removed - 1 from the check if smaller than, because of < last epoch wont get connectivity change anyway.
                 start_evolution = datetime.datetime.now()
                 self.model.weight_evolution(epoch) #wichtige stelle da hier weight evolution durchgeführt wird
                 self.weights = self.model.get_weights()
