@@ -69,6 +69,9 @@ def extract_arrays(pathlist):
         train_time.append(raw[:,4])
     return [loss_train, loss_test, accuracy_train, accuracy_test, train_time]
 
+def extract_arrays_lth(pathlist):
+    pass
+
 def add_to_omni_dict(save_dict, dict_path):
     with open(omni_dict_location, 'r') as f:
         omni_dict = json.load(f)
@@ -116,21 +119,18 @@ if __name__ == "__main__":
     # path = "/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/results/s_m_p/configs5/" #cifar10_medium.txt/
     # dict_path = path[path.find("conf"):path.find(".")].split("/")
     ext = "0.txt"
-    i=0
-    expression = re.compile("seed*")
-    paths = extract_exp_configs("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/results/s_m_p/", expression)
+    lte_exp = re.compile("dumps")#5[0-9]
+    lth_path="/media/jan/9A2CA6762CA64CD7/ba_results/lth/results"
+    large_scale_path = "/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/results/s_m_p/"
+    large_exp = re.compile("seed*")
+    paths = extract_exp_configs(lth_path, lte_exp) 
     for path in paths:
         print(path)
-        save_dict = extract_avg_name(path, ext)
+        #save_dict = extract_avg_name(path, ext)
         #print(save_dict)
-        dict_path = path[path.find("conf"):path.find(".")].split("/")
-        add_to_omni_dict(save_dict,dict_path)
-        # if i ==2:
-        #     break
-        # i+=1
-    # args = parse()
-    # print(args.root_dir)
-    # path = args.root_dir
+        #dict_path = path[path.find("conf"):path.find(".")].split("/")
+        #add_to_omni_dict(save_dict,dict_path)
+
 
     # print(dict_path)
     #
