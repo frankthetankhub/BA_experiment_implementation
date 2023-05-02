@@ -12,6 +12,11 @@ if [ ! -f "$CONF" ]; then
     echo "argument at position 2: $2"
     exit 0
 fi
+if [ ! -z "$3" ] && [[ $3 != --anneal-zeta ]]; then
+    echo "3rd argument supplied, but not matching any available options. Argument supplied: $3"
+
+    exit 0
+fi
 SEED=$1
 echo $SEED
 for FILE in configs/*/*;  
@@ -35,16 +40,16 @@ for FILE in configs/*/*;
         CONF_FILE_SAVE_PARAMETER="$base_conf_name/$base_name"
         echo "the save path given to config_file is: $CONF_FILE_SAVE_PARAMETER"
         EXP_SETUP_ARGS=$(cat $CONF)
-        cmd="pdm run python parallel_training.py $ARGS $EXP_SETUP_ARGS --config_file $CONF_FILE_SAVE_PARAMETER"
+        cmd="pdm run python parallel_training.py $ARGS $EXP_SETUP_ARGS --config_file $CONF_FILE_SAVE_PARAMETER $3"
         if [[ $base_name == cifar10* ]];
         then
-            echo cifar10
             echo $cluster_cmd_cifar -N ${base_conf_name}${base_name}_seed$SEED $cmd --seed $SEED
             $cluster_cmd_cifar -N ${base_conf_name}${base_name}_seed$SEED $cmd --seed $SEED
         else
             echo $cluster_cmd -N ${base_conf_name}${base_name}_seed$SEED $cmd --seed $SEED
             $cluster_cmd -N ${base_conf_name}${base_name}_seed$SEED $cmd --seed $SEED
         fi
+        echo "---------------------------------------------------------------------------------------------------------------------"
     fi
     #done
 done
