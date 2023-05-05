@@ -4,14 +4,9 @@ import argparse
 import os
 import re
 import json
-
+import pandas as pd
 
 omni_dict_location = "/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/omni_dict.json"
-# def parse():
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("--root_dir",default="" ,type=str)
-#     args = parser.parse_args()
-#     return args
 
 def plot(y_values):
     i=0
@@ -38,39 +33,190 @@ def plot(y_values):
         plt.close()
         i+=1
 
-def search_folder(rootdir, extension):
-    #file_list = []
-    path_list = []
+
+def load_raw_dicts(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results/"):
+    with open((base_dir+"large_scale_raw.json"), 'r') as f:
+        large_scale_raw = json.load(f)
+    with open((base_dir+"lth_raw.json"), 'r') as f:
+        lth_raw = json.load(f)    
+    return large_scale_raw, lth_raw
+
+def large_scale(file, as_list=True):
+    raw = np.loadtxt(file)
+    #print(raw.shape)
+    loss_train=raw[:,0]
+    loss_test=raw[:,1]
+    accuracy_train=raw[:,2]
+    accuracy_test=raw[:,3]
+    if raw.shape[1] > 4:
+        train_time=raw[:,4]
+    else:
+        train_time=np.zeros((250))
+    if as_list:
+        loss_train=loss_train.tolist()
+        loss_test=loss_test.tolist()
+        accuracy_train=accuracy_train.tolist()
+        accuracy_test=accuracy_test.tolist()
+        train_time=train_time.tolist()
+    return loss_train, loss_test, accuracy_train, accuracy_test, train_time
+
+def get_data_as_dataframe(exp_root_path, save=False, mode="set"):
+    #large_scale_raw, lth_raw = load_raw_dicts()
+    all_results = []
+    for root, dirs, files in os.walk(exp_root_path):
+        for file in files:
+            if filter_files(file, mode):
+                all_results.append(root+"/"+file)
+    if mode =="set":
+        result_paths_to_df_set(all_results,save)
+    elif mode == "lth":
+        result_paths_to_df_lth(all_results,save)
+    #print(all_results)
+
+def filter_files(file,mode="set"):
+    if mode=="set":
+        criterias = ["0.txt"] #, "bestaccuracy.dat", "times.txt"
+    elif mode == "lth":
+        criteria= [".dat"]
+    else:
+        print(f"Mode: {mode}, not found please specify set or lth")
+        raise
+    for criteria in criterias:
+        if file.endswith(criteria):
+            return True
+    return False
+
+def result_paths_to_df_lth(paths, save=False):
+    results = {}
+    mnist = re.compile(".*mnist.*")
+    cifar = re.compile(".*cifar:*")
+    zeta = re.compile(".*anneal_*")
+    multi = re.compile(".*workers_3.*")
     
-    for root, directories, file in os.walk(rootdir):
-        for file in file:
-            if(file.endswith(extension)):
-                #print(root,directories)
-                #file_list.append(file)
-                p = root + "/" + file
-                path_list.append(p)
-                
-    return path_list
+    for i, path in enumerate(paths):
+        dataset=None
+        arch_size=None
+        compression=100
 
-def extract_arrays(pathlist):
-    #print(pathlist)
-    loss_train=[]
-    loss_test=[]
-    accuracy_train=[]
-    accuracy_test=[]
-    train_time=[]
-    for path in pathlist:
-        raw = np.loadtxt(path)
-        #print(raw.shape)
-        loss_train.append(raw[:,0])
-        loss_test.append(raw[:,1])
-        accuracy_train.append(raw[:,2])
-        accuracy_test.append(raw[:,3])
-        train_time.append(raw[:,4])
-    return [loss_train, loss_test, accuracy_train, accuracy_test, train_time]
+        seed=999
+        path_list: str=path.split("/")
+        for p in path_list:
+            if p.startswith("config"):
+                config=int(p[-1])
+            if cifar.match(p) or mnist.match(p):
+                v = p.split("_")
+                dataset = v[0]
+                arch_size= v[1].rstrip(".txt")
+            if p.startswith("seed"):
+                seed = int(p.lstrip("seed_"))
+            try:
+                seed = int(p)
+            except ValueError:
+                pass
 
-def extract_arrays_lth(pathlist):
-    pass
+        result={"dataset":dataset,
+                "arch_size":arch_size,
+                "seed":seed,                
+                }
+        if path.endswith("_0.txt"):
+            loss_train, loss_test, accuracy_train, accuracy_test, train_time = large_scale(path)
+            result["loss_train"]=loss_train
+            result["loss_test"]=loss_test
+            result["accuracy_train"]=accuracy_train
+            result["accuracy_test"]=accuracy_test
+            result["train_time"]=train_time
+        results[i]=result
+        # if i == 100:
+        #     break
+    #print(results)
+    if save:
+        with open("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/dataframe_dict.json", 'w') as f:
+            json.dump(results, f, ensure_ascii=False, indent=2)
+    df = pd.DataFrame.from_dict(results, orient="index")
+    return df
+
+def result_paths_to_df_set(paths, save=False):
+    results = {}
+    mnist = re.compile(".*mnist.*")
+    cifar = re.compile(".*cifar:*")
+    zeta = re.compile(".*anneal_*")
+    multi = re.compile(".*workers_3.*")
+    
+    for i, path in enumerate(paths):
+        dataset=None
+        arch_size=None
+        start_imp=0
+        epsilon=None
+        zeta_anneal=False
+        workers=0
+        seed=999
+        path_list: str=path.split("/")
+        for p in path_list:
+            if p.startswith("config"):
+                config=int(p[-1])
+            if cifar.match(p) or mnist.match(p):
+                v = p.split("_")
+                dataset = v[0]
+                arch_size= v[1].rstrip(".txt")
+            if p.startswith("seed"):
+                seed = int(p.lstrip("seed_"))
+            if zeta.match(p):
+                zeta_anneal=True
+            if multi.match(p):
+                workers=3
+        if config%4==1:
+            epsilon=20
+        elif config%4==2:
+            epsilon=10
+        elif config%4==3:
+            epsilon=5
+        else: #if config%4==0:
+            epsilon=1
+        if config < 5:
+            start_imp=200
+        elif config >8:
+            start_imp=140
+        result={"dataset":dataset,
+                "arch_size":arch_size,
+                "start_imp":start_imp,
+                "epsilon":epsilon,
+                "workers":workers,
+                "zeta_anneal":zeta_anneal,
+                "seed":seed,                
+                }
+        if path.endswith("_0.txt"):
+            loss_train, loss_test, accuracy_train, accuracy_test, train_time = large_scale(path)
+            result["loss_train"]=loss_train
+            result["loss_test"]=loss_test
+            result["accuracy_train"]=accuracy_train
+            result["accuracy_test"]=accuracy_test
+            result["train_time"]=train_time
+        results[i]=result
+        # if i == 100:
+        #     break
+    #print(results)
+    if save:
+        with open("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/dataframe_dict.json", 'w') as f:
+            json.dump(results, f, ensure_ascii=False, indent=2)
+    df = pd.DataFrame.from_dict(results, orient="index")
+    return df
+
+
+        
+
+
+if __name__ == "__main__":
+    path = "/media/jan/9A2CA6762CA64CD7/ba_results" #cifar10_medium.txt//configs5/ large_scale/results/s_m_p
+    #combined(path, ".txt")
+    # TODO:
+    # create df with raw data instead of dictornary
+    get_data_as_dataframe(path, save=True)
+    data = pd.read_json("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/dataframe_dict.json",orient="index")
+    print(data.isnull().sum())
+    #print(data[data["dataset"]=="mnist"]["accuracy_train"])
+
+
+
 
 def add_to_omni_dict(save_dict, dict_path):
     with open(omni_dict_location, 'r') as f:
@@ -95,54 +241,3 @@ def add_to_omni_dict(save_dict, dict_path):
     d[dict_path[-1]]=save_dict
     with open(omni_dict_location, 'w') as f:
         json.dump(omni_dict, f, ensure_ascii=False, indent=2)
-
-def extract_avg_name(path, ext):
-    paths = search_folder(path, ext)
-    arrays = extract_arrays(paths)
-    avgs = np.average(arrays, axis=1)
-    print(avgs.shape)
-    keys=["Training Loss","Testing Loss","Training Accuracy","Testing Accuracy","Training Time per Epoch"]
-    save_dict = dict(zip(keys,avgs.tolist()))
-    return save_dict
-
-
-
-def extract_exp_configs(path, regex):
-    paths=[]
-    for root, dirs, files in os.walk(path):
-        if any(regex.match(dir) for dir in dirs):
-            paths.append(root)
-    return paths
-
-if __name__ == "__main__":
-    #if not args.root_dir:
-    # path = "/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/results/s_m_p/configs5/" #cifar10_medium.txt/
-    # dict_path = path[path.find("conf"):path.find(".")].split("/")
-    ext = "0.txt"
-    lte_exp = re.compile("dumps")#5[0-9]
-    lth_path="/media/jan/9A2CA6762CA64CD7/ba_results/lth/results"
-    large_scale_path = "/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/results/s_m_p/"
-    large_exp = re.compile("seed*")
-    paths = extract_exp_configs(lth_path, lte_exp) 
-    for path in paths:
-        print(path)
-        #save_dict = extract_avg_name(path, ext)
-        #print(save_dict)
-        #dict_path = path[path.find("conf"):path.find(".")].split("/")
-        #add_to_omni_dict(save_dict,dict_path)
-
-
-    # print(dict_path)
-    #
-    #print(save_dict)
-    #add_to_omni_dict(save_dict,dict_path)
-        
-
-
-    # paths = search_folder(path,ext) #file_list, 
-    # arrays = extract_arrays(paths)
-    # #averaged = average(arrays)
-    # avg2 = np.average(arrays, axis=1)
-    # print(avg2.shape)
-    # print(avg2[3])
-    # plot(avg2)
