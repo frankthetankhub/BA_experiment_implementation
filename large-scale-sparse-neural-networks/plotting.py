@@ -68,16 +68,17 @@ def get_data_as_dataframe(exp_root_path, save=False, mode="set"):
             if filter_files(file, mode):
                 all_results.append(root+"/"+file)
     if mode =="set":
-        result_paths_to_df_set(all_results,save)
+        df = result_paths_to_df_set(all_results,save)
     elif mode == "lth":
-        result_paths_to_df_lth(all_results,save)
+        df = result_paths_to_df_lth(all_results,save)
+    return df
     #print(all_results)
 
 def filter_files(file,mode="set"):
     if mode=="set":
         criterias = ["0.txt"] #, "bestaccuracy.dat", "times.txt"
     elif mode == "lth":
-        criteria= [".dat"]
+        criterias= ["bestaccuracy.dat"]
     else:
         print(f"Mode: {mode}, not found please specify set or lth")
         raise
@@ -88,8 +89,8 @@ def filter_files(file,mode="set"):
 
 def result_paths_to_df_lth(paths, save=False):
     results = {}
-    mnist = re.compile(".*mnist.*")
-    cifar = re.compile(".*cifar:*")
+    mnist = re.compile(".*mn.*")
+    cifar = re.compile(".*cifar.*")
     zeta = re.compile(".*anneal_*")
     multi = re.compile(".*workers_3.*")
     
@@ -97,42 +98,47 @@ def result_paths_to_df_lth(paths, save=False):
         dataset=None
         arch_size=None
         compression=100
+        patience=15
 
         seed=999
         path_list: str=path.split("/")
         for p in path_list:
-            if p.startswith("config"):
-                config=int(p[-1])
             if cifar.match(p) or mnist.match(p):
                 v = p.split("_")
-                dataset = v[0]
-                arch_size= v[1].rstrip(".txt")
-            if p.startswith("seed"):
-                seed = int(p.lstrip("seed_"))
-            try:
+                dataset = v[1]
+                if dataset=="mn":
+                    dataset = "mnist"
+                elif dataset=="fmn":
+                    dataset = "fashionmnist"
+                arch_size= v[2]
+                if len(v) > 3:
+                    patience = 50
+            if p.isnumeric():
                 seed = int(p)
-            except ValueError:
-                pass
+        best_accs = np.load(path, allow_pickle = True).tolist()
 
         result={"dataset":dataset,
                 "arch_size":arch_size,
-                "seed":seed,                
+                "seed":seed,   
+                "best_accuracies":best_accs,
                 }
-        if path.endswith("_0.txt"):
-            loss_train, loss_test, accuracy_train, accuracy_test, train_time = large_scale(path)
-            result["loss_train"]=loss_train
-            result["loss_test"]=loss_test
-            result["accuracy_train"]=accuracy_train
-            result["accuracy_test"]=accuracy_test
-            result["train_time"]=train_time
+        # if path.endswith("_0.txt"):
+        #     loss_train, loss_test, accuracy_train, accuracy_test, train_time = large_scale(path)
+        #     result["loss_train"]=loss_train
+        #     result["loss_test"]=loss_test
+        #     result["accuracy_train"]=accuracy_train
+        #     result["accuracy_test"]=accuracy_test
+        #     result["train_time"]=train_time
         results[i]=result
         # if i == 100:
         #     break
     #print(results)
     if save:
-        with open("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/dataframe_dict.json", 'w') as f:
+        with open("/media/jan/9A2CA6762CA64CD7/ba_results/lth/dataframe_dict_lth_bestaccs.json", 'w') as f:
             json.dump(results, f, ensure_ascii=False, indent=2)
     df = pd.DataFrame.from_dict(results, orient="index")
+    # print("sas:")
+    # print(df)
     return df
 
 def result_paths_to_df_set(paths, save=False):
@@ -207,11 +213,15 @@ def result_paths_to_df_set(paths, save=False):
 
 if __name__ == "__main__":
     path = "/media/jan/9A2CA6762CA64CD7/ba_results" #cifar10_medium.txt//configs5/ large_scale/results/s_m_p
+    path 
     #combined(path, ".txt")
     # TODO:
     # create df with raw data instead of dictornary
-    get_data_as_dataframe(path, save=True)
+    df = get_data_as_dataframe(path, save=True, mode="lth")
+    print(df)
+    print(df[df["dataset"]=="mnist"])
     data = pd.read_json("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/dataframe_dict.json",orient="index")
+    print(data)
     print(data.isnull().sum())
     #print(data[data["dataset"]=="mnist"]["accuracy_train"])
 
