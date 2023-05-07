@@ -71,6 +71,8 @@ def get_data_as_dataframe(exp_root_path, save=False, mode="set"):
         df = result_paths_to_df_set(all_results,save)
     elif mode == "lth":
         df = result_paths_to_df_lth(all_results,save)
+    elif mode == "lth_all":
+        df = result_paths_to_df_lth_all(all_results,save)
     return df
     #print(all_results)
 
@@ -79,6 +81,8 @@ def filter_files(file,mode="set"):
         criterias = ["0.txt"] #, "bestaccuracy.dat", "times.txt"
     elif mode == "lth":
         criterias= ["bestaccuracy.dat"]
+    elif mode == "lth_all":
+        criterias= [".dat"]
     else:
         print(f"Mode: {mode}, not found please specify set or lth")
         raise
@@ -86,6 +90,80 @@ def filter_files(file,mode="set"):
         if file.endswith(criteria):
             return True
     return False
+
+def result_paths_to_df_lth_all(paths, save=False):
+    results = {}
+    mnist = re.compile(".*mn.*")
+    cifar = re.compile(".*cifar.*")
+    # train_loss = re.compile(".*train_loss*")
+    best_accs = re.compile(".*best_accuracy.*")
+    lt_all = re.compile(".*lt_all_.*")
+    df = pd.DataFrame(columns=["dataset","arch_size","seed","compression", "accuracy","trainloss","testloss","patience"])
+    print(len(paths))
+    for i, path in enumerate(paths):
+        dataset=None
+        arch_size=None
+        compression=0.0
+        patience=15
+
+        seed=999
+        path_list: str=path.split("/")
+        #s = pd.Series(columns=["dataset","arch_size","seed","compression", "accuracy","train_loss","test_loss"])
+        for p in path_list:
+            if cifar.match(p) or mnist.match(p):
+                v = p.split("_")
+                dataset = v[1]
+                if dataset=="mn":
+                    dataset = "mnist"
+                elif dataset=="fmn":
+                    dataset = "fashionmnist"
+                arch_size= v[2]
+                if len(v) > 3:
+                    patience = 50
+            if p.isnumeric():
+                seed = int(p)
+            if lt_all.match(p):
+                p = p.strip(".dat")
+                v = p.split("_")
+                compression = v[-1]
+                name = v[-2]
+                values = np.load(path, allow_pickle = True).tolist()
+                #print(name)
+                #print(path)
+                #print(values)
+
+                try:
+                    #print(df)
+                    #print(path)
+                    #print(seed,dataset,arch_size,compression,patience)
+                    idx = df.index[df.seed.eq(seed) & df.dataset.eq(dataset) & df.arch_size.eq(arch_size) & df.compression.eq(compression) & df.patience.eq(patience)]
+                    #print(idx)
+                    df.at[idx[0],name] = values
+                except Exception as e:
+                    #print(e)
+                    #print("try add new entry")
+                    result={"dataset":dataset,
+                        "arch_size":arch_size,
+                        "seed":seed,   
+                        "compression":compression,
+                        "accuracy": None,
+                        "trainloss":None,
+                        "testloss":None,
+                        "patience":patience,
+                        }
+                    result[name]=values
+                    s = pd.Series(result)
+                    #print(s)
+                    df=df.append(s,ignore_index=True)
+                    #print(df)
+        # results[i]=result
+
+    if save:
+        results = df.to_dict(orient="index")
+        with open("/media/jan/9A2CA6762CA64CD7/ba_results/lth/dataframe_dict_lth_all.json", 'w') as f:
+            json.dump(results, f, ensure_ascii=False, indent=2)
+    # df = pd.DataFrame.from_dict(results, orient="index")
+    return df
 
 def result_paths_to_df_lth(paths, save=False):
     results = {}
@@ -99,7 +177,6 @@ def result_paths_to_df_lth(paths, save=False):
         arch_size=None
         compression=100
         patience=15
-
         seed=999
         path_list: str=path.split("/")
         for p in path_list:
@@ -122,23 +199,12 @@ def result_paths_to_df_lth(paths, save=False):
                 "seed":seed,   
                 "best_accuracies":best_accs,
                 }
-        # if path.endswith("_0.txt"):
-        #     loss_train, loss_test, accuracy_train, accuracy_test, train_time = large_scale(path)
-        #     result["loss_train"]=loss_train
-        #     result["loss_test"]=loss_test
-        #     result["accuracy_train"]=accuracy_train
-        #     result["accuracy_test"]=accuracy_test
-        #     result["train_time"]=train_time
         results[i]=result
-        # if i == 100:
-        #     break
-    #print(results)
     if save:
         with open("/media/jan/9A2CA6762CA64CD7/ba_results/lth/dataframe_dict_lth_bestaccs.json", 'w') as f:
             json.dump(results, f, ensure_ascii=False, indent=2)
     df = pd.DataFrame.from_dict(results, orient="index")
-    # print("sas:")
-    # print(df)
+
     return df
 
 def result_paths_to_df_set(paths, save=False):
@@ -198,9 +264,6 @@ def result_paths_to_df_set(paths, save=False):
             result["accuracy_test"]=accuracy_test
             result["train_time"]=train_time
         results[i]=result
-        # if i == 100:
-        #     break
-    #print(results)
     if save:
         with open("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/dataframe_dict.json", 'w') as f:
             json.dump(results, f, ensure_ascii=False, indent=2)
@@ -213,16 +276,17 @@ def result_paths_to_df_set(paths, save=False):
 
 if __name__ == "__main__":
     path = "/media/jan/9A2CA6762CA64CD7/ba_results" #cifar10_medium.txt//configs5/ large_scale/results/s_m_p
-    path 
+    path_lth = "/media/jan/9A2CA6762CA64CD7/ba_results/lth/results"
     #combined(path, ".txt")
     # TODO:
     # create df with raw data instead of dictornary
-    df = get_data_as_dataframe(path, save=True, mode="lth")
+    df = get_data_as_dataframe(path_lth, save=True, mode="lth_all")
     print(df)
+    print("-----")
     print(df[df["dataset"]=="mnist"])
-    data = pd.read_json("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/dataframe_dict.json",orient="index")
-    print(data)
-    print(data.isnull().sum())
+    # data = pd.read_json("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/dataframe_dict.json",orient="index")
+    # print(data)
+    # print(data.isnull().sum())
     #print(data[data["dataset"]=="mnist"]["accuracy_train"])
 
 
