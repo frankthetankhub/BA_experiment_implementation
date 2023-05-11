@@ -128,20 +128,12 @@ def result_paths_to_df_lth_all(paths, save=False):
                 compression = v[-1]
                 name = v[-2]
                 values = np.load(path, allow_pickle = True).tolist()
-                #print(name)
-                #print(path)
-                #print(values)
-
                 try:
-                    #print(df)
-                    #print(path)
-                    #print(seed,dataset,arch_size,compression,patience)
+
                     idx = df.index[df.seed.eq(seed) & df.dataset.eq(dataset) & df.arch_size.eq(arch_size) & df.compression.eq(compression) & df.patience.eq(patience)]
                     #print(idx)
                     df.at[idx[0],name] = values
                 except Exception as e:
-                    #print(e)
-                    #print("try add new entry")
                     result={"dataset":dataset,
                         "arch_size":arch_size,
                         "seed":seed,   
@@ -153,11 +145,7 @@ def result_paths_to_df_lth_all(paths, save=False):
                         }
                     result[name]=values
                     s = pd.Series(result)
-                    #print(s)
                     df=df.append(s,ignore_index=True)
-                    #print(df)
-        # results[i]=result
-
     if save:
         results = df.to_dict(orient="index")
         with open("/media/jan/9A2CA6762CA64CD7/ba_results/lth/dataframe_dict_lth_all.json", 'w') as f:
@@ -175,8 +163,8 @@ def result_paths_to_df_lth(paths, save=False):
     for i, path in enumerate(paths):
         dataset=None
         arch_size=None
-        compression=100
-        patience=15
+        #compression=100
+        patience=15 #?=????ß
         seed=999
         path_list: str=path.split("/")
         for p in path_list:
@@ -270,9 +258,43 @@ def result_paths_to_df_set(paths, save=False):
     df = pd.DataFrame.from_dict(results, orient="index")
     return df
 
+def make_avg_df(df, mode="set"):
+    set_groups = ["dataset","arch_size","start_imp", "epsilon", "workers", "zeta_anneal"]
+    lth_raw_groups = ["dataset","arch_size", "patience", "workers", "zeta_anneal"]
+    if mode =="set":
+        group = ["dataset","arch_size","start_imp", "epsilon", "workers", "zeta_anneal"]
+    elif mode == "lth_raw":
+        group = ["dataset","arch_size","start_imp", "epsilon", "workers", "zeta_anneal"]
+    elif mode =="lth_best":
+        group = ["dataset","arch_size","start_imp", "epsilon", "workers", "zeta_anneal"]
+    else:
+        raise
+    groups = df.groupby(group)
+    new_df = pd.DataFrame(columns=df.columns)
+    i = 0
+    for name,data in groups:
+        d = dict(zip(group,name))
+        # print(name)
+        # print(data)
+        # print(data.columns)
+        # print(data.values)
+        acc_t = np.mean(data['accuracy_test'].tolist(), axis=0)
+        acc_tr = np.mean(data['accuracy_train'].tolist(), axis=0)
+        loss_t = np.mean(data['loss_test'].tolist(), axis=0)
+        loss_tr = np.mean(data['loss_train'].tolist(), axis=0)
+        time = np.mean(data['train_time'].tolist(), axis=0)
+        d["loss_train"] = loss_tr
+        d["loss_test"] = loss_t
+        d["accuracy_train"] = acc_tr
+        d["accuracy_test"] = acc_t
+        d["train_time"] = time
+        new_df = new_df.append(d,ignore_index=True)
+        i+=1
+    return new_df
+
 def load_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results"):
     df_lth_raw = pd.read_json(base_dir+"/lth/dataframe_dict_lth_all.json", orient="index")
-    df_lth_best_acc = pd.read_json(base_dir+"/lth/dataframe_dict_lth_bestaccs.json", orient="index")
+    df_lth_best_acc = pd.read_json(base_dir+"/lth/dataframe_dict_lth_bestaccs.json", orient="index")#9A2CA6762CA64CD7 9A2CA6762CA64CD7
     df_set = pd.read_json(base_dir+"/large_scale/dataframe_dict.json", orient="index")
     # with open((base_dir+"/lth/dataframe_dict_lth_all.json"), 'r') as f:
     #     df_lth_raw = json.load(f)
@@ -286,7 +308,8 @@ def load_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results"):
 
 
 if __name__ == "__main__":
-    pass
+    df, _ ,__ = load_dataframes()
+    make_avg_df(df)
     # path = "/media/jan/9A2CA6762CA64CD7/ba_results" #cifar10_medium.txt//configs5/ large_scale/results/s_m_p
     # path_lth = "/media/jan/9A2CA6762CA64CD7/ba_results/lth/results"
     # #combined(path, ".txt")

@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import argparse
 import os
@@ -60,27 +61,52 @@ def get_uniques(df:pd.DataFrame,mode="set"):
     return uniques
 
 if __name__ == "__main__":
-    path = "/media/jan/9A2CA6762CA64CD7/ba_results" #cifar10_medium.txt//configs5/ large_scale/results/s_m_p
-    path_lth = "/media/jan/9A2CA6762CA64CD7/ba_results/lth/results"
     df_set, df_lth_best, df_lth_raw = dw.load_dataframes()
-    print(df_set.columns)
-    for val in df_set.dataset.unique():
-        print(val)
-    get_uniques(df_set)
-    groups = df_set.groupby(["dataset","arch_size","start_imp", "epsilon", "workers", "zeta_anneal"])
-    #print(groups.get_group(("mnist", "small")))
-    for name,data in groups:
-        print(name)
-        #print(data)
-        #print(type(data))
-        #print(data["accuracy_test"])
-        #print(type(data["accuracy_test"]))
-        print(np.mean(data['accuracy_test'].tolist(), axis=0))
-        #break
-        
-    #avg = df_set[df_set.]
-    #print(df_lth_best)
-    #print(df_lth_raw)
-    # print("-----")
-    # print(df[df["dataset"]=="mnist"])
-  
+    averaged = dw.make_avg_df(df_set)
+    #averaged.plot()#(y="accuracy_train")
+    print(averaged.iloc[0]["accuracy_train"])
+    # groups = averaged.groupby(["start_imp","epsilon"])#,"workers"
+    # for name,data in groups:
+    #     print(data["accuracy_test"].shape)
+    #     print(data["accuracy_test"])
+    #     print(data[data.dataset.eq("cifar10")])
+    #     break
+
+    # exit()
+    # val1 = averaged[averaged.start_imp.eq(140) & averaged.epsilon.eq(20) & averaged.zeta_anneal.eq(False) & averaged.dataset.eq("cifar10") & averaged.arch_size.eq("small") & averaged.workers.eq(0)]
+    # val2 = averaged[averaged.start_imp.eq(140) & averaged.epsilon.eq(20) & averaged.zeta_anneal.eq(True) & averaged.dataset.eq("cifar10") & averaged.arch_size.eq("small") & averaged.workers.eq(0)]
+    # print(val1)
+    # print(val1.shape)
+    # print(val2)
+    # print(val2.shape)
+    # #print(np.array(groups["accuracy_test"]))
+    # plt.plot(np.arange(250), np.squeeze(val1["accuracy_train"].tolist()))
+    # plt.plot(np.arange(250), np.squeeze(val2["accuracy_train"].tolist()))
+    # plt.savefig("plots/test.png")
+    g = averaged[averaged.workers.eq(0)].groupby("dataset")["zeta_anneal","accuracy_test"] #  & averaged.zeta_anneal.eq(False)
+    #g = averaged[averaged.workers.eq(0)].groupby("zeta_anneal")["dataset","accuracy_test"] #  & averaged.zeta_anneal.eq(False)
+    print(g)
+    #print(g["accuracy_test"])
+    labels = []
+    for label, data in g:
+        # print(label)
+        print(data)
+        print(data.shape)
+        # #data.accuracy_test.plot(kind="kde")
+        # for p in data.accuracy_test:
+        #     if p.shape[0] ==251:
+        #         p = p[:250]
+        # #print(data.accuracy_test)
+        #     plt.plot(np.arange(250), p)
+        labels.append(label+"anneal zeta")
+        plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.zeta_anneal.eq(True)]["accuracy_test"]))))
+        labels.append(label)
+        plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.zeta_anneal.eq(False)]["accuracy_test"]))))
+        # labels.append(str(label)+"anneal zeta")
+        # plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.dataset.eq("cifar10")]["accuracy_test"]))))
+        # labels.append(label)
+        # plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.dataset.eq("mnist")]["accuracy_test"]))))
+        # labels.append(label)
+        # plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.dataset.eq("fashionmnist")]["accuracy_test"]))))
+    plt.legend(labels)
+    plt.savefig("plots/test2.png")
