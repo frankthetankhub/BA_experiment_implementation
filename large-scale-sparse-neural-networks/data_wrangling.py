@@ -6,34 +6,6 @@ import re
 import json
 import pandas as pd
 
-omni_dict_location = "/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/omni_dict.json"
-
-def plot(y_values):
-    i=0
-    metrics = ["Training Loss","Testing Loss","Training Accuracy","Testing Accuracy","Training Time per Epoch"]
-    for metric in y_values:
-        
-        l=metric.shape[0]
-        print(l)
-        a = np.arange(l)
-        plt.plot(a, metric, c="blue", label="Winning tickets") 
-        # plt.plot(a, c, c="red", label="Random reinit") 
-        t = metrics[i]
-        print(t)
-        plt.title(t)
-        # plt.xlabel("Weights %") 
-        # plt.ylabel("Test accuracy") 
-        plt.xticks(np.arange(l,step=10), rotation ="vertical") 
-        # plt.ylim(0,100)
-        # plt.legend() 
-        plt.grid(color="gray") 
-
-        plt.savefig(f"{os.getcwd()}/plots/{i}.png", dpi=1200, bbox_inches='tight') 
-        #plt.show()
-        plt.close()
-        i+=1
-
-
 def load_raw_dicts(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results/"):
     with open((base_dir+"large_scale_raw.json"), 'r') as f:
         large_scale_raw = json.load(f)
@@ -69,7 +41,7 @@ def get_data_as_dataframe(exp_root_path, save=False, mode="set"):
                 all_results.append(root+"/"+file)
     if mode =="set":
         df = result_paths_to_df_set(all_results,save)
-    elif mode == "lth":
+    elif mode == "lth_best":
         df = result_paths_to_df_lth(all_results,save)
     elif mode == "lth_all":
         df = result_paths_to_df_lth_all(all_results,save)
@@ -79,7 +51,7 @@ def get_data_as_dataframe(exp_root_path, save=False, mode="set"):
 def filter_files(file,mode="set"):
     if mode=="set":
         criterias = ["0.txt"] #, "bestaccuracy.dat", "times.txt"
-    elif mode == "lth":
+    elif mode == "lth_best":
         criterias= ["bestaccuracy.dat"]
     elif mode == "lth_all":
         criterias= [".dat"]
@@ -92,11 +64,9 @@ def filter_files(file,mode="set"):
     return False
 
 def result_paths_to_df_lth_all(paths, save=False):
-    results = {}
+    #results = {}
     mnist = re.compile(".*mn.*")
     cifar = re.compile(".*cifar.*")
-    # train_loss = re.compile(".*train_loss*")
-    best_accs = re.compile(".*best_accuracy.*")
     lt_all = re.compile(".*lt_all_.*")
     df = pd.DataFrame(columns=["dataset","arch_size","seed","compression", "accuracy","trainloss","testloss","patience"])
     print(len(paths))
@@ -108,7 +78,6 @@ def result_paths_to_df_lth_all(paths, save=False):
 
         seed=999
         path_list: str=path.split("/")
-        #s = pd.Series(columns=["dataset","arch_size","seed","compression", "accuracy","train_loss","test_loss"])
         for p in path_list:
             if cifar.match(p) or mnist.match(p):
                 v = p.split("_")
@@ -126,23 +95,26 @@ def result_paths_to_df_lth_all(paths, save=False):
                 p = p.strip(".dat")
                 v = p.split("_")
                 compression = v[-1]
+                #print(compression)
                 name = v[-2]
+                if name == "loss":
+                    print(path)
+                    exit()
                 values = np.load(path, allow_pickle = True).tolist()
                 try:
-
-                    idx = df.index[df.seed.eq(seed) & df.dataset.eq(dataset) & df.arch_size.eq(arch_size) & df.compression.eq(compression) & df.patience.eq(patience)]
-                    #print(idx)
+                    idx = df.index[df.seed.eq(seed) & df.dataset.eq(dataset) & df.arch_size.eq(arch_size) & np.isclose(df.compression, compression) & df.patience.eq(patience)]
                     df.at[idx[0],name] = values
                 except Exception as e:
                     result={"dataset":dataset,
                         "arch_size":arch_size,
                         "seed":seed,   
-                        "compression":compression,
+                        "compression":float(compression),
+                        "patience":patience,
                         "accuracy": None,
                         "trainloss":None,
                         "testloss":None,
-                        "patience":patience,
                         }
+                    #print(result)
                     result[name]=values
                     s = pd.Series(result)
                     df=df.append(s,ignore_index=True)
@@ -150,21 +122,18 @@ def result_paths_to_df_lth_all(paths, save=False):
         results = df.to_dict(orient="index")
         with open("/media/jan/9A2CA6762CA64CD7/ba_results/lth/dataframe_dict_lth_all.json", 'w') as f:
             json.dump(results, f, ensure_ascii=False, indent=2)
-    # df = pd.DataFrame.from_dict(results, orient="index")
     return df
 
 def result_paths_to_df_lth(paths, save=False):
     results = {}
     mnist = re.compile(".*mn.*")
     cifar = re.compile(".*cifar.*")
-    zeta = re.compile(".*anneal_*")
-    multi = re.compile(".*workers_3.*")
+
     
     for i, path in enumerate(paths):
         dataset=None
         arch_size=None
-        #compression=100
-        patience=15 #?=????ß
+        patience=15
         seed=999
         path_list: str=path.split("/")
         for p in path_list:
@@ -180,12 +149,17 @@ def result_paths_to_df_lth(paths, save=False):
                     patience = 50
             if p.isnumeric():
                 seed = int(p)
+        #if path.endswith("lt_bestaccuracy.dat"):
         best_accs = np.load(path, allow_pickle = True).tolist()
+        time_data_path = path.replace("lt_bestaccuracy.dat", "lt_whole_train_prune_time.dat") 
+        ite_time = np.load(time_data_path, allow_pickle = True).tolist()
 
         result={"dataset":dataset,
                 "arch_size":arch_size,
                 "seed":seed,   
                 "best_accuracies":best_accs,
+                "patience":patience,
+                "time_per_iter": ite_time
                 }
         results[i]=result
     if save:
@@ -230,7 +204,7 @@ def result_paths_to_df_set(paths, save=False):
             epsilon=10
         elif config%4==3:
             epsilon=5
-        else: #if config%4==0:
+        else:
             epsilon=1
         if config < 5:
             start_imp=200
@@ -242,7 +216,8 @@ def result_paths_to_df_set(paths, save=False):
                 "epsilon":epsilon,
                 "workers":workers,
                 "zeta_anneal":zeta_anneal,
-                "seed":seed,                
+                "seed":seed,
+                "config":config                
                 }
         if path.endswith("_0.txt"):
             loss_train, loss_test, accuracy_train, accuracy_test, train_time = large_scale(path)
@@ -258,15 +233,15 @@ def result_paths_to_df_set(paths, save=False):
     df = pd.DataFrame.from_dict(results, orient="index")
     return df
 
-def make_avg_df(df, mode="set"):
-    set_groups = ["dataset","arch_size","start_imp", "epsilon", "workers", "zeta_anneal"]
-    lth_raw_groups = ["dataset","arch_size", "patience", "workers", "zeta_anneal"]
+def make_avg_df(df, mode="set", as_list=True):
+    # set_groups = ["dataset","arch_size","start_imp", "epsilon", "workers", "zeta_anneal"]
+    # lth_all_groups = ["dataset","arch_size", "patience", "workers", "zeta_anneal"]
     if mode =="set":
-        group = ["dataset","arch_size","start_imp", "epsilon", "workers", "zeta_anneal"]
-    elif mode == "lth_raw":
-        group = ["dataset","arch_size","start_imp", "epsilon", "workers", "zeta_anneal"]
+        group = ["dataset","arch_size","start_imp", "epsilon", "workers", "zeta_anneal", "config"]
+    elif mode == "lth_all":
+        group = ["dataset","arch_size", "patience", "compression"]
     elif mode =="lth_best":
-        group = ["dataset","arch_size","start_imp", "epsilon", "workers", "zeta_anneal"]
+        group = ["dataset","arch_size", "patience"]
     else:
         raise
     groups = df.groupby(group)
@@ -278,39 +253,112 @@ def make_avg_df(df, mode="set"):
         # print(data)
         # print(data.columns)
         # print(data.values)
-        acc_t = np.mean(data['accuracy_test'].tolist(), axis=0)
-        acc_tr = np.mean(data['accuracy_train'].tolist(), axis=0)
-        loss_t = np.mean(data['loss_test'].tolist(), axis=0)
-        loss_tr = np.mean(data['loss_train'].tolist(), axis=0)
-        time = np.mean(data['train_time'].tolist(), axis=0)
-        d["loss_train"] = loss_tr
-        d["loss_test"] = loss_t
-        d["accuracy_train"] = acc_tr
-        d["accuracy_test"] = acc_t
-        d["train_time"] = time
+        #print(name)
+        #print(data['accuracy_test'])
+        #print(data['accuracy_test'].tolist())
+        if mode == "set":
+            acc_t = np.mean(data['accuracy_test'].tolist(), axis=0)
+            acc_tr = np.mean(data['accuracy_train'].tolist(), axis=0)
+            loss_t = np.mean(data['loss_test'].tolist(), axis=0)
+            loss_tr = np.mean(data['loss_train'].tolist(), axis=0)
+            time = np.mean(data['train_time'].tolist(), axis=0)
+            if as_list:
+                acc_t = acc_t.tolist()
+                acc_tr = acc_tr.tolist()
+                loss_t = loss_t.tolist()
+                loss_tr = loss_tr.tolist()
+                time = time.tolist()
+            
+            d["loss_train"] = loss_tr
+            d["loss_test"] = loss_t
+            d["accuracy_train"] = acc_tr
+            d["accuracy_test"] = acc_t
+            d["train_time"] = time
+        elif mode=="lth_best":
+            acc_t = np.mean(data['best_accuracies'].tolist(), axis=0)
+            time = np.mean(data['timer_per_iter'].tolist(), axis=0)
+            if as_list:
+                acc_t = acc_t.tolist()
+                time = time.tolist()
+            d["accuracy_test"] = acc_t
+            d["train_time"] = time
+        elif mode =="lth_all":
+            acc_t = np.mean(data['accuracy'], axis=0) #.tolist()
+            loss_tr = np.mean(data["trainloss"].tolist(), axis=0)
+            loss_t = np.mean(data['testloss'].tolist(), axis=0)
+            if as_list:
+                acc_t = acc_t.tolist()
+                loss_tr = loss_tr.tolist()
+                loss_t = loss_t.tolist()
+            d["accuracy_test"] = acc_t
+            d["loss_train"] = loss_tr
+            d["loss_test"] = loss_t
+            d["compression"] = data["compression"]###
+
         new_df = new_df.append(d,ignore_index=True)
         i+=1
+    new_df = new_df.drop(columns=["seed"])
     return new_df
 
 def load_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results"):
-    df_lth_raw = pd.read_json(base_dir+"/lth/dataframe_dict_lth_all.json", orient="index")
+    df_lth_all = pd.read_json(base_dir+"/lth/dataframe_dict_lth_all.json", orient="index")
     df_lth_best_acc = pd.read_json(base_dir+"/lth/dataframe_dict_lth_bestaccs.json", orient="index")#9A2CA6762CA64CD7 9A2CA6762CA64CD7
     df_set = pd.read_json(base_dir+"/large_scale/dataframe_dict.json", orient="index")
     # with open((base_dir+"/lth/dataframe_dict_lth_all.json"), 'r') as f:
-    #     df_lth_raw = json.load(f)
+    #     df_lth_all = json.load(f)
     # with open((base_dir+"/lth/dataframe_dict_lth_bestaccs.json"), 'r') as f:
     #     df_lth_best_acc = json.load(f)    
     # with open((base_dir+"/large_scale/dataframe_dict.json"), 'r') as f:
     #     df_lth_best_acc = json.load(f)    
-    return df_set, df_lth_best_acc, df_lth_raw
+    return df_set, df_lth_best_acc, df_lth_all
 
-        
 
+def load_averaged_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results"):
+    #df_lth_all = pd.read_json(base_dir+"/lth/dataframe_dict_lth_all.json", orient="index")
+    #df_lth_best_acc = pd.read_json(base_dir+"/lth/dataframe_dict_lth_bestaccs.json", orient="index")#9A2CA6762CA64CD7 9A2CA6762CA64CD7
+    df_set_avg = pd.read_json(base_dir+"/large_scale/dataframe_dict_averaged.json", orient="index")
+    return df_set_avg#, df_lth_all, df_lth_best_acc
+
+def create_all_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results", save = False, save_non_averaged=False):
+    for spec in ["lth_all","lth_best"]: #"set",
+        print(f"currently doing spec: {spec}")
+        df = get_data_as_dataframe(base_dir, mode=spec, save=save_non_averaged)
+        df_avg = make_avg_df(df, mode=spec)
+        dic = df_avg.to_dict(orient="index")
+        print(dic[0])
+        if spec == "set":
+            save_path="/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/dataframe_dict_averaged.json"
+        elif spec == "lth_all":
+            save_path = "/media/jan/9A2CA6762CA64CD7/ba_results/lth/dataframe_dict_lth_all.json"
+        else:
+            save_path = "/media/jan/9A2CA6762CA64CD7/ba_results/lth/dataframe_dict_lth_bestaccs.json"
+        if save:
+            with open(save_path, 'w') as f:
+                json.dump(dic, f, ensure_ascii=False, indent=2)
 
 if __name__ == "__main__":
-    df, _ ,__ = load_dataframes()
-    make_avg_df(df)
+    # df, _ ,__ = load_dataframes()
+    # make_avg_df(df)
+    create_all_dataframes(save=True, save_non_averaged = True)
     # path = "/media/jan/9A2CA6762CA64CD7/ba_results" #cifar10_medium.txt//configs5/ large_scale/results/s_m_p
+    # df_raw_set = get_data_as_dataframe(path,True)
+    # #print(df_raw_set)
+    # df_avg_set = make_avg_df(df_raw_set)
+    # #print(df_avg_set)
+    # json_file = df_avg_set.to_json()
+    # dic = df_avg_set.to_dict(orient="index")
+    #print(dic)
+    #print(json_file)
+    # with open("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/dataframe_dict_averaged.json", 'w') as f:
+    #         #json.dump(json_file, f, ensure_ascii=False, indent=2)
+    #         #f.write(json_file)
+    #         json.dump(dic, f, ensure_ascii=False, indent=2)
+
+    # df_set_avg = load_averaged_dataframes()#
+    # print(df_set_avg)
+    # df_set_avg.head()
+
+
     # path_lth = "/media/jan/9A2CA6762CA64CD7/ba_results/lth/results"
     # #combined(path, ".txt")
     # # TODO:
@@ -323,3 +371,12 @@ if __name__ == "__main__":
     # print(data)
     # print(data.isnull().sum())
     #print(data[data["dataset"]=="mnist"]["accuracy_train"])
+
+
+# for name, df in groups:
+#      print(df)
+#      print(name)
+#      print(df.iloc[0])
+#      print(df.iloc[1])
+#      break
+# idx = df.index[df.seed.eq(50) & df.dataset.eq("cifar10") & df.arch_size.eq("large") & df.compression.eq(0.6) & df.patience.eq(50)]

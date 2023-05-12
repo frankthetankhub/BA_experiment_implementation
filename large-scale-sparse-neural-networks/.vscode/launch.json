@@ -48,6 +48,14 @@
             "console": "integratedTerminal",
             "args": ["--monitor", "--log-file","results/logfile","--epochs", "10","--processes","4"] //"dataset", "cifar10" "True", 
 
-        }
+        },
+        {
+            "name": "datawrangling",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/jan/BA/large_scale_cluster/large-scale-sparse-neural-networks/data_wrangling.py",
+            "console": "integratedTerminal",
+
+        },
     ]
 }
