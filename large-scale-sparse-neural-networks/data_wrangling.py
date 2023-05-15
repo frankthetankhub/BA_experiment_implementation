@@ -15,11 +15,17 @@ def load_raw_dicts(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results/"):
 
 def large_scale(file, as_list=True):
     raw = np.loadtxt(file)
+    workers = re.compile(".*workers_3.*")
     #print(raw.shape)
     loss_train=raw[:,0]
     loss_test=raw[:,1]
     accuracy_train=raw[:,2]
     accuracy_test=raw[:,3]
+    if workers.match(file):
+        loss_train=loss_train[:-1]
+        loss_test=loss_test[:-1]
+        accuracy_train=accuracy_train[:-1]
+        accuracy_test=accuracy_test[:-1]
     if raw.shape[1] > 4:
         train_time=raw[:,4]
     else:
@@ -100,10 +106,15 @@ def result_paths_to_df_lth_all(paths, save=False):
                 if name == "loss":
                     print(path)
                     exit()
-                values = np.load(path, allow_pickle = True).tolist()
+                values = np.load(path, allow_pickle = True)
                 try:
+                    last_val = values[values>0][-1]
+                    #print(last_val)
+                    values[values == 0] = last_val
                     idx = df.index[df.seed.eq(seed) & df.dataset.eq(dataset) & df.arch_size.eq(arch_size) & np.isclose(df.compression.astype(float), compression) & df.patience.eq(patience)] #
                     #print(idx)
+                    values = values.tolist()
+                    print(type(values))
                     df.at[idx[0],name] = values
                 except Exception as e:
                     #print(e)
@@ -188,8 +199,8 @@ def result_paths_to_df_set(paths, save=False):
         seed=999
         path_list: str=path.split("/")
         for p in path_list:
-            if p.startswith("config"):
-                config=int(p[-1])
+            if p.startswith("configs"):
+                config=int(p.strip("configs"))
             if cifar.match(p) or mnist.match(p):
                 v = p.split("_")
                 dataset = v[0]
@@ -223,10 +234,10 @@ def result_paths_to_df_set(paths, save=False):
                 }
         if path.endswith("_0.txt"):
             loss_train, loss_test, accuracy_train, accuracy_test, train_time = large_scale(path)
+            result["accuracy_test"]=accuracy_test
+            result["accuracy_train"]=accuracy_train
             result["loss_train"]=loss_train
             result["loss_test"]=loss_test
-            result["accuracy_train"]=accuracy_train
-            result["accuracy_test"]=accuracy_test
             result["train_time"]=train_time
         results[i]=result
     if save:
@@ -240,12 +251,14 @@ def make_avg_df(df, mode="set", as_list=True):
     # lth_all_groups = ["dataset","arch_size", "patience", "workers", "zeta_anneal"]
     if mode =="set":
         group = ["dataset","arch_size","start_imp", "epsilon", "workers", "zeta_anneal", "config"]
+        new_df = pd.DataFrame(columns=df.columns)
     elif mode == "lth_all":
         group = ["dataset","arch_size", "patience", "compression"]
         new_df = pd.DataFrame(columns=df.columns)
         new_df = new_df.drop(columns=["accuracy","trainloss","testloss"])
     elif mode =="lth_best":
         group = ["dataset","arch_size", "patience"]
+        new_df = pd.DataFrame(columns=df.columns)
     else:
         raise
     groups = df.groupby(group)
@@ -273,11 +286,11 @@ def make_avg_df(df, mode="set", as_list=True):
                 loss_tr = loss_tr.tolist()
                 time = time.tolist()
             
-            d["loss_train"] = loss_tr
-            d["loss_test"] = loss_t
             d["accuracy_train"] = acc_tr
             d["accuracy_test"] = acc_t
             d["train_time"] = time
+            d["loss_train"] = loss_tr
+            d["loss_test"] = loss_t
         elif mode=="lth_best":
             acc_t = np.mean(data['best_accuracies'].tolist(), axis=0)
             time = np.mean(data['timer_per_iter'].tolist(), axis=0)
@@ -318,13 +331,13 @@ def load_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results"):
 
 
 def load_averaged_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results"):
-    #df_lth_all = pd.read_json(base_dir+"/lth/dataframe_dict_lth_all.json", orient="index")
+    df_lth_all = pd.read_json(base_dir+"/lth/dataframe_dict_lth_all_averaged.json", orient="index")
     #df_lth_best_acc = pd.read_json(base_dir+"/lth/dataframe_dict_lth_bestaccs.json", orient="index")#9A2CA6762CA64CD7 9A2CA6762CA64CD7
     df_set_avg = pd.read_json(base_dir+"/large_scale/dataframe_dict_averaged.json", orient="index")
-    return df_set_avg#, df_lth_all, df_lth_best_acc
+    return df_set_avg, df_lth_all#, df_lth_best_acc
 
-def create_all_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results", save = False, save_non_averaged=False):
-    for spec in ["lth_all","lth_best"]: #"set",
+def create_all_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results", save = False, save_non_averaged=False, specs = ["set","lth_all","lth_best"]):
+    for spec in specs: #
         print(f"currently doing spec: {spec}")
         df = get_data_as_dataframe(base_dir, mode=spec, save=save_non_averaged)
         df_avg = make_avg_df(df, mode=spec)
@@ -346,8 +359,8 @@ def create_all_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results", sav
 
 if __name__ == "__main__":
     # df, _ ,__ = load_dataframes()
-    # make_avg_df(df)
-    create_all_dataframes(save=True, save_non_averaged = True)
+    #make_avg_df(df)
+    create_all_dataframes(save=True, save_non_averaged = True, specs=["set"])
     # path = "/media/jan/9A2CA6762CA64CD7/ba_results" #cifar10_medium.txt//configs5/ large_scale/results/s_m_p
     # df_raw_set = get_data_as_dataframe(path,True)
     # #print(df_raw_set)
@@ -365,34 +378,3 @@ if __name__ == "__main__":
     # df_set_avg = load_averaged_dataframes()#
     # print(df_set_avg)
     # df_set_avg.head()
-
-
-    # path_lth = "/media/jan/9A2CA6762CA64CD7/ba_results/lth/results"
-    # #combined(path, ".txt")
-    # # TODO:
-    # # create df with raw data instead of dictornary
-    # df = get_data_as_dataframe(path_lth, save=True, mode="lth_all")
-    # print(df)
-    # print("-----")
-    # print(df[df["dataset"]=="mnist"])
-    # data = pd.read_json("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/dataframe_dict.json",orient="index")
-    # print(data)
-    # print(data.isnull().sum())
-    #print(data[data["dataset"]=="mnist"]["accuracy_train"])
-
-base_dir="/media/jan/9A2CA6762CA64CD7/ba_results"
-df_lth_all = pd.read_json(base_dir+"/lth/dataframe_dict_lth_all.json", orient="index")
-df = df_lth_all
-group = ["dataset","arch_size", "patience", "compression"]
-groups = df.groupby(group)
-for name, df in groups:
-     print(df)
-     print(name)
-     print(df.iloc[0])
-     print(df.iloc[1])
-     d = dict(zip(group,name))
-     print(d)
-     print(df["compression"])
-     break
-idx = df.index[df.seed.eq(50) & df.dataset.eq("cifar10") & df.arch_size.eq("large") & np.isclose(df.compression, 0.6) & df.patience.eq(50)]
-idx = df.index[df.seed.eq(50) & df.dataset.eq("cifar10") & df.arch_size.eq("large") & df.compression.eq(0.6) & df.patience.eq(50)]

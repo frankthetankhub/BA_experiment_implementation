@@ -37,13 +37,6 @@ def plot(y_values):
         i+=1
 
 
-def load_raw_dicts(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results/"):
-    with open((base_dir+"large_scale_raw.json"), 'r') as f:
-        large_scale_raw = json.load(f)
-    with open((base_dir+"lth_raw.json"), 'r') as f:
-        lth_raw = json.load(f)    
-    return large_scale_raw, lth_raw
-
 def plot_dataset_performance_averaged_set():
     df_set, df_lth_best, df_lth_raw = dw.load_dataframes()
     averaged = dw.make_avg_df(df_set)
@@ -59,24 +52,155 @@ def plot_dataset_performance_averaged_set():
     plt.savefig("plots/dataset_performance_averaged_anneal_comparison.png")
 
 def plot_dataset_performance_set():
-    df_set, df_lth_best, df_lth_raw = dw.load_dataframes()
-    averaged = dw.make_avg_df(df_set)
-    g = averaged[averaged.workers.eq(0)].groupby("dataset")["zeta_anneal","accuracy_test"] #  & averaged.zeta_anneal.eq(False)
+    averaged = dw.load_averaged_dataframes()
+    #averaged = dw.make_avg_df(df_set)
+    g = averaged[averaged.workers.eq(0)].groupby(["dataset","arch_size"])["zeta_anneal","accuracy_test"] #  & averaged.zeta_anneal.eq(False)
     labels = []
     for label, data in g:
+        print(label)
         print(data)
-        labels.append(label+"anneal zeta")
-        plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.zeta_anneal.eq(True)]["accuracy_test"]))))
-        labels.append(label)
-        plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.zeta_anneal.eq(False)]["accuracy_test"]))))
+        labels.append(str(label)+"anneal zeta")
+        d1 = np.array(data[data.zeta_anneal.eq(True)]["accuracy_test"].tolist())
+        print(d1)
+        d1 = d1.reshape(-1,250)
+        d1 = np.squeeze(np.mean(d1, axis = 0))
+        plt.plot(np.arange(250), d1)
+        labels.append(str(label))
+        plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.zeta_anneal.eq(False)]["accuracy_test"].tolist()), axis=0)))
     plt.legend(labels)
     plt.savefig("plots/dataset_performance_anneal_comparison.png")
 
+def plot_individual_performance_config():
+    averaged = dw.load_averaged_dataframes()
+    for config in list(range(1,13)):#["cifar10", "mnist", "fashionmnist"]:
+        print(averaged)
+        # g = averaged[]
+        # print(g)
+        g = averaged[averaged.workers.eq(0) & averaged.config.eq(config)].groupby(["dataset", "arch_size"])["zeta_anneal","accuracy_test"] #
+        labels = []
+        
+        plt.figure(figsize=(20,10))
+        for label, data in g:
+            plt.vlines(x=[140, 200], ymin=0, ymax = 1, colors="gray", ls="--")
+            print(label)
+            # print(type(label))
+            labels.append(str(label)+"anneal zeta")
+            d1 = data[data.zeta_anneal.eq(True)& data.config.eq(config)]["accuracy_test"]# 
+            #print(d1)
+            d1 = np.array(d1.tolist())
+            d1 = d1.reshape(-1,250)
+            d1 = np.squeeze(np.mean(d1, axis = 0))
+            plt.plot(np.arange(250), d1)
 
+            labels.append(str(label)+"no anneal")
+            d1 = np.array(data[data.zeta_anneal.eq(False)& data.config.eq(config)]["accuracy_test"].tolist())
+            d1 = d1.reshape(-1,250)
+            d1 = np.squeeze(np.mean(d1, axis = 0))
+            plt.plot(np.arange(250), d1,)
+            plt.legend(labels)
+        plt.savefig(f"plots/config_comparison/config{config}_performance")
+        plt.close()
+
+def plot_compare_all_configs():
+    averaged,_ = dw.load_averaged_dataframes()
+    
+    g = averaged[averaged.workers.eq(0)].groupby(["config"])["zeta_anneal","accuracy_test"]
+    labels = []
+    
+    plt.figure(figsize=(15,10))
+    plt.vlines(x=[140, 200], ymin=0, ymax = 1, colors="gray", ls="--")
+    for label, data in g:
+        print(label)
+        # print(type(label))
+        labels.append(str(label))
+        if label<5: ls_stil = "-"
+        elif label >8: ls_stil = "--"
+        else: ls_stil =":"
+        print(data)
+        d1 = data["accuracy_test"].tolist()
+        # print([len(l) for l in d1])
+        # d1 = np.array(np.array(d for d in d1))
+        d1 = np.array(d1).reshape(-1,250)
+        d1 = np.squeeze(np.mean(d1, axis = 0))
+        plt.plot(np.arange(250), d1, ls=ls_stil)
+        plt.legend(labels)
+    plt.tight_layout()
+    plt.savefig(f"plots/config_comparison/all_configs_averaged")
+    plt.close()
+
+def plot_compare_set_lth():
+    df_set, df_lth = dw.load_averaged_dataframes()
+    lth_group = df_lth.groupby("dataset")
+    for comp, e in zip([21.5,10.85,5.55,1.05],[20,10,5,1]):
+        for name, data in lth_group:
+            # print(name)
+            # print(data)
+            fig = plt.figure(figsize=(15,10))
+            x = np.arange(250)
+            y = data[ np.isclose(data.compression,comp, rtol=0.06) & data.arch_size.eq("medium") & data.patience.eq(15)]["accuracy_test"].tolist()
+            y = np.array(y).reshape(250)
+            if name == "mnist":
+                print("------------")
+                print(df_set[df_set.epsilon.eq(1) & df_set.arch_size.eq("medium") & df_set.dataset.eq(name) & df_set.workers.eq(0)]["accuracy_test"])
+            y2 = df_set[df_set.epsilon.eq(e) & df_set.arch_size.eq("medium") & df_set.dataset.eq(name) & df_set.workers.eq(0)]["accuracy_test"].tolist()
+            y2 = np.mean(y2, axis=0)
+            plt.plot(x,y, label=f"lth: {int(100-comp)+1}% sparsity") 
+            plt.plot(x,y2*100,label=f"set: e{e}") 
+            plt.plot
+            plt.grid(color="gray")
+            lth_unpruned = data[ np.isclose(data.compression,100, rtol=0.06) & data.arch_size.eq("medium") & data.patience.eq(15)]["accuracy_test"].tolist()
+            lth_unpruned = np.array(lth_unpruned).reshape(250)
+            plt.plot(x, lth_unpruned, label="lth_unpruned")
+            plt.legend()
+            plt.savefig(f"plots/lth_set_comp/lth_vs_set_{name}_e{e}")
+
+
+def plot_compare_performance_configs_Set():
+    df_set = dw.load_averaged_dataframes()
+    df_set = df_set.drop(columns=["arch_size","start_imp", "epsilon"])
+    df = df_set[df_set.workers.eq(0)]
+    df = df.drop(columns=["workers"])
+    for dataset in ["cifar10", "mnist", "fashionmnist"]:
+        #df = df[df.dataset.eq(dataset)]
+        #df = df.drop(columns=["dataset"])
+        # g = df.groupby("config")["zeta_anneal","accuracy_test"] #  & averaged.zeta_anneal.eq(False)
+        labels = []
+        # for label, data in g:
+        #     print(label)
+        #     print(data[data.zeta_anneal.eq(True)]["accuracy_test"])
+        #     print(data[data.zeta_anneal.eq(False)]["accuracy_test"])
+        #     print("---------------")
+        #     labels.append(str(label)+"anneal zeta")
+        #     plt.plot(np.arange(250), data[data.zeta_anneal.eq(True)]["accuracy_test"])
+        #     labels.append(label)
+        #     plt.plot(np.arange(250), data[data.zeta_anneal.eq(False)]["accuracy_test"])
+        #     #plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.zeta_anneal.eq(False)]["accuracy_test"]))))
+        for config in list(range(1,13)):
+            print(config)
+            labels.append(f"{dataset} config {config}")
+            data = df[df.dataset.eq(dataset) & df.config.eq(config) & df.zeta_anneal.eq(False)]["accuracy_test"]
+            if len(data) == 0:
+                print(config)
+                continue
+            data = np.array(data.tolist()).reshape(3,250)
+            data = np.squeeze(np.mean(data, axis = 0)) #df.dataset.eq(dataset) 
+            plt.plot(np.arange(250), data)
+            plt.grid("gray")
+            plt.yscale("logit")
+            # labels.append(dataset)
+            # plt.plot(np.arange(250), df[df.dataset.eq(dataset) & df.zeta_anneal.eq(False)]["accuracy_test"])
+            plt.legend(labels)
+        plt.savefig(f"plots/{dataset}_config_comparison.png")
+        plt.close()
+        
 
 
 if __name__ == "__main__":
-    plot_dataset_performance_set
+    #plot_compare_performance_configs_Set()
+    #plot_dataset_performance_set()
+    # plot_individual_performance_config()
+    #plot_compare_all_configs()
+    plot_compare_set_lth()
 
     # df_set, df_lth_best, df_lth_raw = dw.load_dataframes()
     # averaged = dw.make_avg_df(df_set)

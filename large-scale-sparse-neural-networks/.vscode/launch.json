@@ -57,5 +57,13 @@
             "console": "integratedTerminal",
 
         },
+        {
+            "name": "plotting",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/jan/BA/large_scale_cluster/large-scale-sparse-neural-networks/plotting.py",
+            "console": "integratedTerminal",
+
+        },
     ]
 }
