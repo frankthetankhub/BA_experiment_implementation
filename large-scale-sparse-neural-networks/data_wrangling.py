@@ -192,7 +192,7 @@ def result_paths_to_df_set(paths, save=False):
     for i, path in enumerate(paths):
         dataset=None
         arch_size=None
-        start_imp=0
+        start_imp=140
         epsilon=None
         zeta_anneal=False
         workers=0
@@ -222,7 +222,7 @@ def result_paths_to_df_set(paths, save=False):
         if config < 5:
             start_imp=200
         elif config >8:
-            start_imp=140
+            start_imp=0
         result={"dataset":dataset,
                 "arch_size":arch_size,
                 "start_imp":start_imp,
@@ -342,7 +342,7 @@ def create_all_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results", sav
         df = get_data_as_dataframe(base_dir, mode=spec, save=save_non_averaged)
         df_avg = make_avg_df(df, mode=spec)
         print("df averaged:")
-        print(df_avg)
+        #print(df_avg)
         print(df_avg.iloc[0])
         print(df_avg.iloc[1])
         dic = df_avg.to_dict(orient="index")

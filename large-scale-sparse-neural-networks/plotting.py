@@ -42,20 +42,22 @@ def plot_dataset_performance_averaged_set():
     averaged = dw.make_avg_df(df_set)
     g = averaged[averaged.workers.eq(0)].groupby("dataset")["zeta_anneal","accuracy_test"] #  & averaged.zeta_anneal.eq(False)
     labels = []
+    plt.figure(figsize=(15,10))
     for label, data in g:
         print(data)
         labels.append(label+"anneal zeta")
-        plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.zeta_anneal.eq(True)]["accuracy_test"]))))
+        plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.zeta_anneal.eq(True)]["accuracy_test"].tolist()),axis=0)))
         labels.append(label)
-        plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.zeta_anneal.eq(False)]["accuracy_test"]))))
+        plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.zeta_anneal.eq(False)]["accuracy_test"].tolist()),axis=0)))
     plt.legend(labels)
     plt.savefig("plots/dataset_performance_averaged_anneal_comparison.png")
 
 def plot_dataset_performance_set():
-    averaged = dw.load_averaged_dataframes()
+    averaged, _ = dw.load_averaged_dataframes()
     #averaged = dw.make_avg_df(df_set)
     g = averaged[averaged.workers.eq(0)].groupby(["dataset","arch_size"])["zeta_anneal","accuracy_test"] #  & averaged.zeta_anneal.eq(False)
     labels = []
+    plt.figure(figsize=(15,10))
     for label, data in g:
         print(label)
         print(data)
@@ -69,6 +71,25 @@ def plot_dataset_performance_set():
         plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.zeta_anneal.eq(False)]["accuracy_test"].tolist()), axis=0)))
     plt.legend(labels)
     plt.savefig("plots/dataset_performance_anneal_comparison.png")
+
+def plot_non_averaged():
+    df_set, df_lth_best_acc, df_lth_all = dw.load_dataframes()
+    vals = df_set[df_set.epsilon.eq(1) & df_set.arch_size.eq("medium") & df_set.dataset.eq("cifar10") & df_set.workers.eq(0) & df_set.zeta_anneal.eq(False) & df_set.start_imp.eq(0)]#["accuracy_test"]
+    print(vals.columns)
+    print(vals)
+    print(vals["seed"])
+    for v in vals["accuracy_test"]:
+        plt.plot(np.arange(250), 100*np.array(v))
+    es = df_lth_all[np.isclose(df_lth_all.compression,1.05, atol=0.05) & df_lth_all.arch_size.eq("medium") & df_lth_all.dataset.eq("cifar10") & df_lth_all.patience.eq(15)]
+    print(es)
+    print(es.columns)
+    print(es.compression)
+    for e in es["accuracy"]:
+        plt.plot(np.arange(250), e)
+    plt.savefig("plots/teststet")
+    plt.close()
+
+
 
 def plot_individual_performance_config():
     averaged = dw.load_averaged_dataframes()
@@ -126,34 +147,52 @@ def plot_compare_all_configs():
         plt.legend(labels)
     plt.tight_layout()
     plt.savefig(f"plots/config_comparison/all_configs_averaged")
-    plt.close()
+    plt.close("all")
 
-def plot_compare_set_lth():
+
+def plot_compare_set_lth2():
     df_set, df_lth = dw.load_averaged_dataframes()
-    lth_group = df_lth.groupby("dataset")
-    for comp, e in zip([21.5,10.85,5.55,1.05],[20,10,5,1]):
-        for name, data in lth_group:
-            # print(name)
-            # print(data)
-            fig = plt.figure(figsize=(15,10))
+    datasets = df_lth.groupby("dataset")
+    for comp, e in zip([21.4,10.85,5.55,1.05],[20,10,5,1]):
+        plt.rc("font", size=18)
+        for name, data in datasets:
+
+            #fig, ax = plt.subplots(1,3)
+            #for arch_size in ["small", "medium", "large"]:
+            #print(arch_size)
+            plt.figure(figsize=(15,10))
+            plt.suptitle(f"Lottery Ticket vs. Sparse Evolutionary Training \n {name}".title())
             x = np.arange(250)
-            y = data[ np.isclose(data.compression,comp, rtol=0.06) & data.arch_size.eq("medium") & data.patience.eq(15)]["accuracy_test"].tolist()
-            y = np.array(y).reshape(250)
-            if name == "mnist":
-                print("------------")
-                print(df_set[df_set.epsilon.eq(1) & df_set.arch_size.eq("medium") & df_set.dataset.eq(name) & df_set.workers.eq(0)]["accuracy_test"])
-            y2 = df_set[df_set.epsilon.eq(e) & df_set.arch_size.eq("medium") & df_set.dataset.eq(name) & df_set.workers.eq(0)]["accuracy_test"].tolist()
-            y2 = np.mean(y2, axis=0)
-            plt.plot(x,y, label=f"lth: {int(100-comp)+1}% sparsity") 
-            plt.plot(x,y2*100,label=f"set: e{e}") 
-            plt.plot
-            plt.grid(color="gray")
+            plt.xlabel("Epochs")
+            plt.ylabel("Test Accuracy")
+            plt.plot(x, 100*np.mean(df_set[df_set.epsilon.eq(e) & df_set.arch_size.eq("small") & df_set.dataset.eq(name) & df_set.workers.eq(0)]["accuracy_test"].tolist(), axis=0),label=f"set: e{e} small")  
+            plt.plot(x, 100*np.mean(df_set[df_set.epsilon.eq(e) & df_set.arch_size.eq("medium") & df_set.dataset.eq(name) & df_set.workers.eq(0)]["accuracy_test"].tolist(), axis=0),label=f"set: e{e} medium")
+            plt.plot(x, 100*np.mean(df_set[df_set.epsilon.eq(e) & df_set.arch_size.eq( "large") & df_set.dataset.eq(name) & df_set.workers.eq(0)]["accuracy_test"].tolist(), axis=0),label=f"set: e{e} large")
+            plt.plot(x,np.array(data[ np.isclose(data.compression,comp, rtol=0.06) & data.arch_size.eq("small") & data.patience.eq(15)]["accuracy_test"].tolist()).reshape(250), label=f"lth: {int(100-comp)+1}% sparsity small")
+            plt.plot(x,np.array(data[ np.isclose(data.compression,comp, rtol=0.06) & data.arch_size.eq("medium") & data.patience.eq(15)]["accuracy_test"].tolist()).reshape(250), label=f"lth: {int(100-comp)+1}% sparsity medium")
+            plt.plot(x,np.array(data[ np.isclose(data.compression,comp, rtol=0.06) & data.arch_size.eq( "large") & data.patience.eq(15)]["accuracy_test"].tolist()).reshape(250), label=f"lth: {int(100-comp)+1}% sparsity large") 
+
+
+            
+            lth_unpruned = data[ np.isclose(data.compression,100, rtol=0.06) & data.arch_size.eq("small") & data.patience.eq(15)]["accuracy_test"].tolist()
+            lth_unpruned = np.array(lth_unpruned).reshape(250)
+            max_acc = np.max(lth_unpruned)
+            plt.plot(x, lth_unpruned, label=f"lth_unpruned small architecture", color="aqua")
+            plt.hlines(y=max_acc, xmax=250, xmin=0, ls="--", colors="aqua", alpha=0.4)
             lth_unpruned = data[ np.isclose(data.compression,100, rtol=0.06) & data.arch_size.eq("medium") & data.patience.eq(15)]["accuracy_test"].tolist()
             lth_unpruned = np.array(lth_unpruned).reshape(250)
-            plt.plot(x, lth_unpruned, label="lth_unpruned")
+            max_acc = np.max(lth_unpruned)
+            plt.plot(x, lth_unpruned, label=f"lth_unpruned medium architecture", color="steelblue")
+            plt.hlines(y=max_acc, xmax=250, xmin=0, ls="--", colors="steelblue", alpha=0.4)
+            lth_unpruned = data[ np.isclose(data.compression,100, rtol=0.06) & data.arch_size.eq("large") & data.patience.eq(15)]["accuracy_test"].tolist()
+            lth_unpruned = np.array(lth_unpruned).reshape(250)
+            max_acc = np.max(lth_unpruned)
+            plt.plot(x, lth_unpruned, label=f"lth_unpruned large architecture", color="lightgray")
+            plt.hlines(y=max_acc, xmax=250, xmin=0, ls="--", colors="lightgray", alpha=0.4)
             plt.legend()
+            plt.grid(color="gray")
             plt.savefig(f"plots/lth_set_comp/lth_vs_set_{name}_e{e}")
-
+            plt.close("all")
 
 def plot_compare_performance_configs_Set():
     df_set = dw.load_averaged_dataframes()
@@ -200,54 +239,44 @@ if __name__ == "__main__":
     #plot_dataset_performance_set()
     # plot_individual_performance_config()
     #plot_compare_all_configs()
-    plot_compare_set_lth()
+    # plot_dataset_performance_averaged_set()
+    # plot_dataset_performance_set()
+    # plot_compare_set_lth2()
+    plot_non_averaged()
 
-    # df_set, df_lth_best, df_lth_raw = dw.load_dataframes()
-    # averaged = dw.make_avg_df(df_set)
-    # #averaged.plot()#(y="accuracy_train")
-    # print(averaged.iloc[0]["accuracy_train"])
-    # # groups = averaged.groupby(["start_imp","epsilon"])#,"workers"
-    # # for name,data in groups:
-    # #     print(data["accuracy_test"].shape)
-    # #     print(data["accuracy_test"])
-    # #     print(data[data.dataset.eq("cifar10")])
-    # #     break
 
-    # # exit()
-    # # val1 = averaged[averaged.start_imp.eq(140) & averaged.epsilon.eq(20) & averaged.zeta_anneal.eq(False) & averaged.dataset.eq("cifar10") & averaged.arch_size.eq("small") & averaged.workers.eq(0)]
-    # # val2 = averaged[averaged.start_imp.eq(140) & averaged.epsilon.eq(20) & averaged.zeta_anneal.eq(True) & averaged.dataset.eq("cifar10") & averaged.arch_size.eq("small") & averaged.workers.eq(0)]
-    # # print(val1)
-    # # print(val1.shape)
-    # # print(val2)
-    # # print(val2.shape)
-    # # #print(np.array(groups["accuracy_test"]))
-    # # plt.plot(np.arange(250), np.squeeze(val1["accuracy_train"].tolist()))
-    # # plt.plot(np.arange(250), np.squeeze(val2["accuracy_train"].tolist()))
-    # # plt.savefig("plots/test.png")
-    # g = averaged[averaged.workers.eq(0)].groupby("dataset")["zeta_anneal","accuracy_test"] #  & averaged.zeta_anneal.eq(False)
-    # #g = averaged[averaged.workers.eq(0)].groupby("zeta_anneal")["dataset","accuracy_test"] #  & averaged.zeta_anneal.eq(False)
-    # print(g)
-    # #print(g["accuracy_test"])
-    # labels = []
-    # for label, data in g:
-    #     # print(label)
-    #     print(data)
-    #     #print(data.shape)
-    #     # #data.accuracy_test.plot(kind="kde")
-    #     # for p in data.accuracy_test:
-    #     #     if p.shape[0] ==251:
-    #     #         p = p[:250]
-    #     # #print(data.accuracy_test)
-    #     #     plt.plot(np.arange(250), p)
-    #     labels.append(label+"anneal zeta")
-    #     plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.zeta_anneal.eq(True)]["accuracy_test"]))))
-    #     labels.append(label)
-    #     plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.zeta_anneal.eq(False)]["accuracy_test"]))))
-    #     # labels.append(str(label)+"anneal zeta")
-    #     # plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.dataset.eq("cifar10")]["accuracy_test"]))))
-    #     # labels.append(label)
-    #     # plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.dataset.eq("mnist")]["accuracy_test"]))))
-    #     # labels.append(label)
-    #     # plt.plot(np.arange(250), np.squeeze(np.mean(np.array(data[data.dataset.eq("fashionmnist")]["accuracy_test"]))))
-    # plt.legend(labels)
-    # plt.savefig("plots/test2.png")
+
+
+
+# def plot_compare_set_lth():
+#     df_set, df_lth = dw.load_averaged_dataframes()
+#     lth_group = df_lth.groupby("dataset")
+#     for comp, e in zip([21.4,10.85,5.55,1.05],[20,10,5,1]):
+#         plt.rc("font", size=18)
+#         for name, data in lth_group:
+#             plt.figure(figsize=(15,10))
+#             plt.suptitle(f"Lottery Ticket vs. Sparse Evolutionary Training \n {name}".title())
+#             x = np.arange(250)
+#             y = data[ np.isclose(data.compression,comp, rtol=0.06) & data.arch_size.eq("medium") & data.patience.eq(15)]["accuracy_test"].tolist()
+#             #plt.set_cmap(matplotlib.colors.Colormap("Accent", 33))
+#             plt.xlabel("Epochs")
+#             plt.ylabel("Test Accuracy")
+#             y = np.array(y).reshape(250)
+#             if name == "mnist":
+#                 print("------------")
+#                 print(df_set[df_set.epsilon.eq(1) & df_set.arch_size.eq("medium") & df_set.dataset.eq(name) & df_set.workers.eq(0)]["accuracy_test"])
+#             y2 = df_set[df_set.epsilon.eq(e) & df_set.arch_size.eq("medium") & df_set.dataset.eq(name) & df_set.workers.eq(0)]["accuracy_test"].tolist()
+#             y2 = np.mean(y2, axis=0)
+#             plt.plot(x,y, label=f"lth: {int(100-comp)+1}% sparsity") 
+#             plt.plot(x,y2*100,label=f"set: e{e}") 
+#             plt.plot
+            
+#             plt.grid(color="gray")
+#             lth_unpruned = data[ np.isclose(data.compression,100, rtol=0.06) & data.arch_size.eq("medium") & data.patience.eq(15)]["accuracy_test"].tolist()
+#             lth_unpruned = np.array(lth_unpruned).reshape(250)
+#             max_acc = np.max(lth_unpruned)
+#             plt.plot(x, lth_unpruned, label="lth_unpruned", color="gray")
+#             plt.hlines(y=max_acc, xmax=250, xmin=0, ls="--", colors="gray", alpha=0.3)
+#             plt.legend()
+#             plt.savefig(f"plots/lth_set_comp/lth_vs_set_{name}_e{e}")
+#             plt.close("all")
