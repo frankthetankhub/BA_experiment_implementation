@@ -78,16 +78,114 @@ def plot_non_averaged():
     print(vals.columns)
     print(vals)
     print(vals["seed"])
-    for v in vals["accuracy_test"]:
-        plt.plot(np.arange(250), 100*np.array(v))
+    for v,seed in zip(vals.accuracy_test, vals.seed):
+        
+        plt.plot(np.arange(250), 100*np.array(v), label=f"SET, seed:{seed}")
     es = df_lth_all[np.isclose(df_lth_all.compression,1.05, atol=0.05) & df_lth_all.arch_size.eq("medium") & df_lth_all.dataset.eq("cifar10") & df_lth_all.patience.eq(15)]
     print(es)
     print(es.columns)
-    print(es.compression)
-    for e in es["accuracy"]:
-        plt.plot(np.arange(250), e)
+    print(es.seed)
+    i=0
+    for v,seed in zip(es.accuracy,es.seed):
+        # if i>1: 
+        #     break
+        plt.plot(np.arange(250), v, label=f"LTH, seed:{seed}", linewidth=(10-(i*2)))
+        i+=1
+    plt.legend()
     plt.savefig("plots/teststet")
     plt.close()
+
+def plot_compare_single_multi_worker():
+    df_set, df_lth_best_acc, df_lth_all = dw.load_dataframes()
+    groups = df_set[df_set.zeta_anneal.eq(False)].groupby(["dataset", "arch_size", "config"])
+    for name, data in groups:
+        multi = data[data.workers.eq(3)]
+        single = data[data.workers.eq(0)]
+        for index,row in multi.iterrows():
+            #print(index)
+            #print(row["accuracy"])
+            plt.plot(row["accuracy_test"], alpha=0.2, color="blue", linewidth=1, label=f"WASAP, seed:{row.seed}")
+        for index,row in single.iterrows():
+            #print(index)
+            #print(row["accuracy"])
+            plt.plot(row["accuracy_test"], color="orange", alpha=0.2, linewidth=1 ,label=f"SET, seed:{row.seed}")
+        plt.plot(np.average(np.array(single["accuracy_test"].tolist()), axis=0), color="orange", linewidth=1 ,label=f"Single Worker, average")
+        plt.plot(np.average(np.array(multi["accuracy_test"].tolist()), axis=0), color="blue", linewidth=1 ,label=f"WASAP, average")
+        plt.legend()
+        plt.xlabel("Training Epochs")
+        plt.ylabel("Test Accuracy")
+        plt.suptitle(f"Performance Comparison of Single Worker and WASAP:\n\nConfig: {name[2]}          Dataset: {name[0].capitalize()}          Architecture Size: {name[1].capitalize()}")
+        #plt.suptitle(f"Performance Comparison of Single Worker and WASAP:\nConfig: {name[2]}\nDataset: {name[0].capitalize()}\n Architecture Size: {name[1].capitalize()}")
+        plt.gcf().set_size_inches(15, 8)
+        plt.xlim([-0.5, 250])
+        plt.tight_layout()
+        plt.savefig(f"plots/num_worker_comparison/{name[0]}_{name[1]}_{name[2]}")
+        plt.close("all")
+    for name, data in df_set[df_set.zeta_anneal.eq(False)].groupby(["dataset", "arch_size"]):
+        print(name)
+        multi = data[data.workers.eq(3)]
+        single = data[data.workers.eq(0)] 
+        avg_multi=np.average(np.array(multi["accuracy_test"].tolist()),axis=0)
+        plt.plot(avg_multi, color="blue", linewidth=1 ,label=f"WASAP")
+        plt.plot(np.average(np.array(single["accuracy_test"].tolist()), axis=0), color="orange", linewidth=1 ,label=f"Single Worker")#3 Workers,averaged over all configs
+        #if name[0]=="cifar10":
+        plt.hlines(np.max(avg_multi), 0,250, color="blue", alpha=0.5, ls="--")
+        plt.legend()
+        plt.xlabel("Training Epochs")
+        plt.ylabel("Test Accuracy")
+        #plt.suptitle(f"Performance Comparison of Single Worker and WASAP, Averaged Over All Configurations\nDataset: {name[0].capitalize()}\n Architecture Size: {name[1].capitalize()}")
+        plt.suptitle(f"Performance Comparison of Single Worker and WASAP, Averaged Over All Configurations\n\nDataset: {name[0].capitalize()}          Architecture Size: {name[1].capitalize()}")
+        plt.gcf().set_size_inches(15, 8)
+        plt.xlim([-0.5, 250])
+        plt.tight_layout()
+        plt.savefig(f"plots/num_worker_comparison/{name[0]}_{name[1]}_averaged")
+        plt.close("all")
+
+def plot_all_lth_raw():
+    df_set, df_lth_best_acc, df_lth_all = dw.load_dataframes()   
+    print(df_lth_all.compression) 
+    lth_groups = df_lth_all.groupby(["arch_size","dataset","compression"])
+    for name,data in lth_groups:
+        #print(data)
+        #print(type(data))
+        print(name)
+        b = np.isclose(name[2], [21.05,10.85,5.55,1.05], atol=0.05)#.any()
+        print(b)
+        if not b.any():
+            # print(name)
+            # print(data)
+            continue
+        pat_15 = data[data.patience.eq(15)]# , np.isclose(data.compression,data, rtol=0.06)
+        pat_50 = data[data.patience.eq(50)]
+        #print(pat_15)
+        #print(pat_50)
+        #fig = plt.Figure(figsize=(25,10))
+        for index,row in pat_15.iterrows():
+            #print(index)
+            #print(row["accuracy"])
+            plt.plot(row["accuracy"], alpha=0.3, color="blue", linewidth=1, label=f"Patience: 15, seed:{row.seed}")
+            lth_treshold = np.max(df_lth_all[df_lth_all.patience.eq(15) & df_lth_all.seed.eq(row.seed) & df_lth_all.dataset.eq(name[1]) & df_lth_all.arch_size.eq(name[0]) & df_lth_all.compression.eq(100)]["accuracy"].tolist())
+            plt.hlines(lth_treshold,0,250, colors="gray", ls="--", linewidth=1)
+            comp100= df_lth_all[df_lth_all.patience.eq(15) &df_lth_all.seed.eq(row.seed) & df_lth_all.dataset.eq(name[1]) & df_lth_all.arch_size.eq(name[0]) & df_lth_all.compression.eq(100)]["accuracy"].tolist()
+            #print(comp100)
+            plt.plot(comp100[0], color = "gray",label =f"Patience: 15, seed:{row.seed}, unpruned")
+
+        for index,row in pat_50.iterrows():
+            #print(index)
+            #print(row["accuracy"])
+            plt.plot(row["accuracy"], color="orange", alpha=0.3, linewidth=1 ,label=f"Patience: 50, seed:{row.seed}")
+            lth_treshold = np.max(df_lth_all[df_lth_all.patience.eq(50) &df_lth_all.seed.eq(row.seed) & df_lth_all.dataset.eq(name[1]) & df_lth_all.arch_size.eq(name[0]) & df_lth_all.compression.eq(100)]["accuracy"].tolist())
+            plt.hlines(lth_treshold,0,250, colors="gray", ls="--", linewidth=1)
+            comp100= df_lth_all[df_lth_all.patience.eq(50) &df_lth_all.seed.eq(row.seed) & df_lth_all.dataset.eq(name[1]) & df_lth_all.arch_size.eq(name[0]) & df_lth_all.compression.eq(100)]["accuracy"].tolist()
+            #print(comp100)
+            plt.plot(comp100[0], color = "gray",label =f"Patience: 50, seed:{row.seed}, unpruned")
+        #plt.plot(pat_50, color="red")
+        save_comp=str(name[2]).replace('.',"_")
+        plt.legend()
+        plt.gcf().set_size_inches(15, 8)
+        plt.savefig(f"plots/individual_runs_variance/lth/{name[1]}_{name[0]}_{save_comp}")
+        plt.close("all")
+
 
 
 
@@ -242,7 +340,9 @@ if __name__ == "__main__":
     # plot_dataset_performance_averaged_set()
     # plot_dataset_performance_set()
     # plot_compare_set_lth2()
-    plot_non_averaged()
+    #plot_non_averaged()
+    #plot_all_lth_raw()
+    plot_compare_single_multi_worker()
 
 
 
