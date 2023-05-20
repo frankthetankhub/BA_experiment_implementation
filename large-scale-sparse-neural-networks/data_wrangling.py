@@ -13,15 +13,15 @@ def load_raw_dicts(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results/"):
         lth_raw = json.load(f)    
     return large_scale_raw, lth_raw
 
-def large_scale(file, as_list=True):
-    raw = np.loadtxt(file)
+def large_scale(_file, as_list=True):
+    raw = np.loadtxt(_file)
     workers = re.compile(".*workers_3.*")
     #print(raw.shape)
     loss_train=raw[:,0]
     loss_test=raw[:,1]
     accuracy_train=raw[:,2]
     accuracy_test=raw[:,3]
-    if workers.match(file):
+    if workers.match(_file):
         loss_train=loss_train[:-1]
         loss_test=loss_test[:-1]
         accuracy_train=accuracy_train[:-1]
@@ -30,6 +30,14 @@ def large_scale(file, as_list=True):
         train_time=raw[:,4]
     else:
         train_time=np.zeros((250))
+        #hacky solution: read out total execution time from logfile and save it in the last position of train_time
+        head, _ = _file.split("process_0.txt")
+        logfile = head + "logs_execution.txt"
+        with open(logfile) as f:
+            data = f.read().replace("\n","")
+            total_time = data.split("Total execution time is ")[1]
+            total_time = total_time.split(" ")[0]
+        train_time[-1] = total_time
     if as_list:
         loss_train=loss_train.tolist()
         loss_test=loss_test.tolist()
@@ -57,6 +65,7 @@ def get_data_as_dataframe(exp_root_path, save=False, mode="set"):
 def filter_files(file,mode="set"):
     if mode=="set":
         criterias = ["0.txt"] #, "bestaccuracy.dat", "times.txt"
+        #criterias = ["anneal_zeta_process_0.txt","workers_3_process_0.txt",""]
     elif mode == "lth_best":
         criterias= ["bestaccuracy.dat"]
     elif mode == "lth_all":
@@ -162,7 +171,6 @@ def result_paths_to_df_lth(paths, save=False):
                     patience = 50
             if p.isnumeric():
                 seed = int(p)
-        #if path.endswith("lt_bestaccuracy.dat"):
         best_accs = np.load(path, allow_pickle = True).tolist()
         time_data_path = path.replace("lt_bestaccuracy.dat", "lt_whole_train_prune_time.dat") 
         ite_time = np.load(time_data_path, allow_pickle = True).tolist()
@@ -222,7 +230,7 @@ def result_paths_to_df_set(paths, save=False):
         if config < 5:
             start_imp=200
         elif config >8:
-            start_imp=0
+            start_imp=250#0
         result={"dataset":dataset,
                 "arch_size":arch_size,
                 "start_imp":start_imp,
@@ -247,8 +255,6 @@ def result_paths_to_df_set(paths, save=False):
     return df
 
 def make_avg_df(df, mode="set", as_list=True):
-    # set_groups = ["dataset","arch_size","start_imp", "epsilon", "workers", "zeta_anneal"]
-    # lth_all_groups = ["dataset","arch_size", "patience", "workers", "zeta_anneal"]
     if mode =="set":
         group = ["dataset","arch_size","start_imp", "epsilon", "workers", "zeta_anneal", "config"]
         new_df = pd.DataFrame(columns=df.columns)
@@ -319,20 +325,15 @@ def make_avg_df(df, mode="set", as_list=True):
 
 def load_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results"):
     df_lth_all = pd.read_json(base_dir+"/lth/dataframe_dict_lth_all.json", orient="index")
-    df_lth_best_acc = pd.read_json(base_dir+"/lth/dataframe_dict_lth_bestaccs.json", orient="index")#9A2CA6762CA64CD7 9A2CA6762CA64CD7
+    df_lth_best_acc = pd.read_json(base_dir+"/lth/dataframe_dict_lth_bestaccs.json", orient="index")
     df_set = pd.read_json(base_dir+"/large_scale/dataframe_dict.json", orient="index")
-    # with open((base_dir+"/lth/dataframe_dict_lth_all.json"), 'r') as f:
-    #     df_lth_all = json.load(f)
-    # with open((base_dir+"/lth/dataframe_dict_lth_bestaccs.json"), 'r') as f:
-    #     df_lth_best_acc = json.load(f)    
-    # with open((base_dir+"/large_scale/dataframe_dict.json"), 'r') as f:
-    #     df_lth_best_acc = json.load(f)    
     return df_set, df_lth_best_acc, df_lth_all
 
 
 def load_averaged_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results"):
+    """Loads and returns the averaged Dataframes for set and lth; set is first, lth second."""
     df_lth_all = pd.read_json(base_dir+"/lth/dataframe_dict_lth_all_averaged.json", orient="index")
-    #df_lth_best_acc = pd.read_json(base_dir+"/lth/dataframe_dict_lth_bestaccs.json", orient="index")#9A2CA6762CA64CD7 9A2CA6762CA64CD7
+    #df_lth_best_acc = pd.read_json(base_dir+"/lth/dataframe_dict_lth_bestaccs.json", orient="index")
     df_set_avg = pd.read_json(base_dir+"/large_scale/dataframe_dict_averaged.json", orient="index")
     return df_set_avg, df_lth_all#, df_lth_best_acc
 
@@ -360,7 +361,8 @@ def create_all_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results", sav
 if __name__ == "__main__":
     # df, _ ,__ = load_dataframes()
     #make_avg_df(df)
-    create_all_dataframes(save=True, save_non_averaged = True, specs=["set"])
+    create_all_dataframes(save=True, save_non_averaged = True, specs=["lth_all"])
+
     # path = "/media/jan/9A2CA6762CA64CD7/ba_results" #cifar10_medium.txt//configs5/ large_scale/results/s_m_p
     # df_raw_set = get_data_as_dataframe(path,True)
     # #print(df_raw_set)
