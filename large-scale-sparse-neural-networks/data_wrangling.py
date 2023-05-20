@@ -123,14 +123,14 @@ def result_paths_to_df_lth_all(paths, save=False):
                     idx = df.index[df.seed.eq(seed) & df.dataset.eq(dataset) & df.arch_size.eq(arch_size) & np.isclose(df.compression.astype(float), compression) & df.patience.eq(patience)] #
                     #print(idx)
                     values = values.tolist()
-                    print(type(values))
+                    #print(type(values))
                     df.at[idx[0],name] = values
                 except Exception as e:
                     #print(e)
                     result={"dataset":dataset,
                         "arch_size":arch_size,
                         "seed":seed,   
-                        "compression":float(compression),
+                        "compression":round(compression, 1),
                         "patience":patience,
                         "accuracy": None,
                         "trainloss":None,
