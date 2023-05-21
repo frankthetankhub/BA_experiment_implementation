@@ -23,12 +23,17 @@ def large_scale(_file, as_list=True):
     accuracy_test=raw[:,3]
     if workers.match(_file):
         loss_train=loss_train[:-1]
+        loss_train[loss_train==0] = loss_train[np.nonzero(loss_train)][-1]
         loss_test=loss_test[:-1]
+        loss_test[loss_test==0] = loss_test[np.nonzero(loss_test)][-1]
         accuracy_train=accuracy_train[:-1]
+        accuracy_train[accuracy_train==0] = accuracy_train[np.nonzero(accuracy_train)][-1]
         accuracy_test=accuracy_test[:-1]
+        accuracy_test[accuracy_test==0] = accuracy_test[np.nonzero(accuracy_test)][-1]
     if raw.shape[1] > 4:
         train_time=raw[:,4]
     else:
+        # loss_train[loss_train==0] = loss_train[np.nonzero(loss_train)][-1]
         train_time=np.zeros((250))
         #hacky solution: read out total execution time from logfile and save it in the last position of train_time
         head, _ = _file.split("process_0.txt")
@@ -259,11 +264,20 @@ def result_paths_to_df_set(paths, save=False):
             result["loss_test"]=loss_test
             result["train_time"]=train_time
         results[i]=result
+
+    df = pd.DataFrame.from_dict(results, orient="index")
+    df = df.drop_duplicates(subset=["dataset","arch_size","zeta_anneal","config","workers","seed"]) 
+    df["accuracy_train"] = df["accuracy_train"].replace(to_replace=0.0, method="ffill")
+    results = df.to_dict(orient="index") 
     if save:
         with open("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/dataframe_dict.json", 'w') as f:
             json.dump(results, f, ensure_ascii=False, indent=2)
-    df = pd.DataFrame.from_dict(results, orient="index")
     return df
+    # if save:
+    #     with open("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/dataframe_dict.json", 'w') as f:
+    #         json.dump(results, f, ensure_ascii=False, indent=2)
+    # df = pd.DataFrame.from_dict(results, orient="index")
+    # return df
 
 def make_avg_df(df, mode="set", as_list=True):
     if mode =="set":
@@ -379,7 +393,7 @@ def create_all_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results", sav
 if __name__ == "__main__":
     # df, _ ,__ = load_dataframes()
     #make_avg_df(df)
-    create_all_dataframes(save=True, save_non_averaged = True) #, specs=["lth_all"]
+    create_all_dataframes(save=True, save_non_averaged = True, specs=["set"]) #, specs=["lth_all"]
 
     # path = "/media/jan/9A2CA6762CA64CD7/ba_results" #cifar10_medium.txt//configs5/ large_scale/results/s_m_p
     # df_raw_set = get_data_as_dataframe(path,True)
