@@ -10,6 +10,7 @@ import data_wrangling as dw
 import itertools
 
 omni_dict_location = "/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/omni_dict.json"
+lth_compression_values = [100.0, 80.1, 64.2, 51.4, 41.2, 33.0, 26.4, 21.2, 16.9, 13.6, 10.9, 8.7, 7.0, 5.6, 4.5, 3.6, 2.9, 2.3, 1.8, 1.5, 1.2, 1.0, 0.8, 0.6]
 
 def plot(y_values):
     i=0
@@ -30,9 +31,7 @@ def plot(y_values):
         # plt.ylim(0,100)
         # plt.legend() 
         plt.grid(color="gray") 
-
         plt.savefig(f"{os.getcwd()}/plots/{i}.png", dpi=1200, bbox_inches='tight') 
-        #plt.show()
         plt.close()
         i+=1
 
@@ -54,7 +53,6 @@ def plot_dataset_performance_averaged_set():
 
 def plot_dataset_performance_set():
     averaged, _ = dw.load_averaged_dataframes()
-    #averaged = dw.make_avg_df(df_set)
     g = averaged[averaged.workers.eq(0)].groupby(["dataset","arch_size"])["zeta_anneal","accuracy_test"] #  & averaged.zeta_anneal.eq(False)
     labels = []
     plt.figure(figsize=(15,10))
@@ -227,7 +225,7 @@ def plot_compare_all_configs():
     labels = []
     
     plt.figure(figsize=(15,10))
-    plt.vlines(x=[140, 200], ymin=0, ymax = 1, colors="gray", ls="--")
+    
     for label, data in g:
         print(label)
         # print(type(label))
@@ -243,6 +241,7 @@ def plot_compare_all_configs():
         d1 = np.squeeze(np.mean(d1, axis = 0))
         plt.plot(np.arange(250), d1, ls=ls_stil)
         plt.legend(labels)
+    plt.vlines(x=[140, 200], ymin=0, ymax = 1, colors="gray", ls="--")
     plt.tight_layout()
     plt.savefig(f"plots/config_comparison/all_configs_averaged")
     plt.close("all")
@@ -292,6 +291,18 @@ def plot_compare_set_lth2():
             plt.savefig(f"plots/lth_set_comp/lth_vs_set_{name}_e{e}")
             plt.close("all")
 
+def plot_indivdual_traintimes_set():
+    df_set,_,_ = dw.load_dataframes()
+    df_set = df_set[df_set.workers.eq(0)]
+    fig, ax = plt.subplots(1,5)
+    fig.set_size_inches(15,5)
+    for i in range(5):
+        print(df_set.iloc[i])
+        ax[i].plot(df_set.iloc[i].train_time)
+    plt.tight_layout()
+    plt.savefig(f"plots/training_times/set/5_plots_combined")
+    plt.close("all")
+
 def plot_compare_performance_configs_Set():
     df_set = dw.load_averaged_dataframes()
     df_set = df_set.drop(columns=["arch_size","start_imp", "epsilon"])
@@ -320,69 +331,87 @@ def plot_compare_performance_configs_Set():
         
 def create_tabular_overview():
     df_set, df_lth_best_acc, df_lth_all = dw.load_dataframes()
-    tab_set = df_set.pivot_table(index =["dataset","start_imp", "zeta_anneal","workers","arch_size"],columns=["epsilon"], values=["accuracy_test"], #, "train_time"
-                                #   aggfunc={"accuracy_test": [lambda x: (np.mean( np.max(np.array(x.tolist()), axis=1)) *100).round(1) ,
-                                #                             lambda x: (np.max(np.array(x.tolist())) *100).round(1),
-                                #                             lambda x: (np.min( np.max( (np.array(x.tolist()) ) , axis=1) ) *100).round(1)] })
-                                aggfunc={"accuracy_test": lambda x: [(np.mean( np.max(np.array(x.tolist()), axis=1)) *100).round(1) ,
-                                                            (np.max(np.array(x.tolist())) *100).round(1),
-                                                            (np.min( np.max( (np.array(x.tolist()) ) , axis=1) ) *100).round(1)] }) #,
-                                            #                                                           "train_time":[lambda x:np.mean(np.sum(x.tolist(), axis=0))]
-    print(tab_set)
-    print(tab_set.shape)
-    print(type(tab_set))
-    print(tab_set.columns)
-    tab_set.to_latex("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/set_tabular_full.tex")
+    # tab_set = df_set.pivot_table(index =["dataset","start_imp", "zeta_anneal","workers","arch_size"],columns=["epsilon"], values=["accuracy_test"], #, "train_time"
+    #                             #   aggfunc={"accuracy_test": [lambda x: (np.mean( np.max(np.array(x.tolist()), axis=1)) *100).round(1) ,
+    #                             #                             lambda x: (np.max(np.array(x.tolist())) *100).round(1),
+    #                             #                             lambda x: (np.min( np.max( (np.array(x.tolist()) ) , axis=1) ) *100).round(1)] })
+    #                             aggfunc={"accuracy_test": lambda x: [(np.mean( np.max(np.array(x.tolist()), axis=1)) *100).round(1) ,
+    #                                                         (np.max(np.array(x.tolist())) *100).round(1),
+    #                                                         (np.min( np.max( (np.array(x.tolist()) ) , axis=1) ) *100).round(1)] }) #,
+    #                                         #                                                           "train_time":[lambda x:np.mean(np.sum(x.tolist(), axis=0))]
+    # print(tab_set)
+    # print(tab_set.shape)
+    # print(type(tab_set))
+    # print(tab_set.columns)
+    # tab_set.to_latex("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/set_tabular_full.tex")
 
-    tab_set = df_set.pivot_table(index =["dataset", "zeta_anneal","workers","arch_size"],columns=["epsilon"], values=["accuracy_test"],
+    # tab_set = df_set.pivot_table(index =["dataset", "zeta_anneal","workers","arch_size"],columns=["epsilon"], values=["accuracy_test"],
 
-                                aggfunc={"accuracy_test": lambda x: [(np.mean( np.max(np.array(x.tolist()), axis=1)) *100).round(1) ,
-                                                            ((np.max(np.array(x.tolist())) *100).round(1)-(np.mean( np.max(np.array(x.tolist()), axis=1)) *100)).round(1),
-                                                            ((np.min( np.max( (np.array(x.tolist()) ) , axis=1) ) *100) - (np.mean( np.max(np.array(x.tolist()), axis=1)) *100)).round(1)] })
-                                # aggfunc={"accuracy_test": lambda x: [(np.mean( np.max(np.array(x.tolist()), axis=1)) *100).round(1) ,
-                                #                         (np.max(np.array(x.tolist())) *100).round(1)-(np.mean( np.max(np.array(x.tolist()), axis=1)) *100).round(1),
-                                #                         (np.min( np.max( (np.array(x.tolist()) ) , axis=1) ) *100).round(1) - (np.mean( np.max(np.array(x.tolist()), axis=1)) *100).round(1)] })
-    print(tab_set)
-    print(tab_set.shape)
-    print(type(tab_set))
-    print(tab_set.columns)
-    tab_set.to_latex("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/set_tabular.tex")
+    #                             aggfunc={"accuracy_test": lambda x: [(np.mean( np.max(np.array(x.tolist()), axis=1)) *100).round(1) ,
+    #                                                         ((np.max(np.array(x.tolist())) *100).round(1)-(np.mean( np.max(np.array(x.tolist()), axis=1)) *100)).round(1),
+    #                                                         ((np.min( np.max( (np.array(x.tolist()) ) , axis=1) ) *100) - (np.mean( np.max(np.array(x.tolist()), axis=1)) *100)).round(1)] })
+    #                             # aggfunc={"accuracy_test": lambda x: [(np.mean( np.max(np.array(x.tolist()), axis=1)) *100).round(1) ,
+    #                             #                         (np.max(np.array(x.tolist())) *100).round(1)-(np.mean( np.max(np.array(x.tolist()), axis=1)) *100).round(1),
+    #                             #                         (np.min( np.max( (np.array(x.tolist()) ) , axis=1) ) *100).round(1) - (np.mean( np.max(np.array(x.tolist()), axis=1)) *100).round(1)] })
+    # print(tab_set)
+    # print(tab_set.shape)
+    # print(type(tab_set))
+    # print(tab_set.columns)
+    # tab_set.to_latex("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/set_tabular.tex")
+
+    # #test for correctness
+    # # for name, data in df_set.groupby(["dataset","start_imp","workers", "zeta_anneal", "arch_size","epsilon"]):
+    # #     print(name)
+    # #     print(data.train_time)
+    # #     print(data.iloc[0].train_time)
+    # #     print(np.sum(data.iloc[0].train_time))
+    # #     print(data.iloc[1].train_time)
+    # #     print(np.sum(data.iloc[1].train_time))
+    # #     print(data.iloc[2].train_time)
+    # #     print(np.sum(data.iloc[2].train_time))
+    # #     print(np.mean(np.sum(data.train_time.tolist(), axis=1)))
+    # #     return
+    # tab_set = df_set.pivot_table(index =["dataset","start_imp","workers", "arch_size"],columns=["epsilon"], values=[ "train_time"],
+    #                               aggfunc={
+    #                                         # "accuracy_test": [lambda x: (np.mean( np.max(np.array(x.tolist()), axis=0)) *100).round(1) ,
+    #                                         #                 lambda x: (np.max(np.array(x.tolist())) *100).round(1),
+    #                                         #                 lambda x: (np.min( np.max( (np.array(x.tolist()) ) , axis=1) ) *100).round(1) ],
+    #                                         "train_time":[lambda x:np.mean(np.sum(x.tolist(), axis=1))]}) #"config" ,lambda x: np.min(np.array(x.tolist())) ,"epsilon","zeta_anneal" , axis=1
+    # print(tab_set)
+    # print(tab_set.shape)
+    # print(type(tab_set))
+    # tab_set.to_latex("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/set_traintimes_tabular.tex")
     
-    print(df_lth_best_acc)
-
-    #test for correctness
-    # for name, data in df_set.groupby(["dataset","start_imp","workers", "zeta_anneal", "arch_size","epsilon"]):
-    #     print(name)
-    #     print(data.train_time)
-    #     print(data.iloc[0].train_time)
-    #     print(np.sum(data.iloc[0].train_time))
-    #     print(data.iloc[1].train_time)
-    #     print(np.sum(data.iloc[1].train_time))
-    #     print(data.iloc[2].train_time)
-    #     print(np.sum(data.iloc[2].train_time))
-    #     print(np.mean(np.sum(data.train_time.tolist(), axis=1)))
-    #     return
-    tab_set = df_set.pivot_table(index =["dataset","start_imp","workers", "arch_size"],columns=["epsilon"], values=[ "train_time"],
+    #b = np.isclose(df_lth_all.compression, [21.05,10.85,5.55,1.05], atol=0.05)
+    
+    b = [np.isclose(df_lth_all.compression, comp) for comp in [100, 21.2,10.9,5.6,1.2]]
+    b = np.any(b, axis=0)
+    print(b.shape)
+    df_lth_selected = df_lth_all[b]
+    tab_lth_all = df_lth_selected.pivot_table(index =["dataset","patience","arch_size"],columns=["compression"], values=["accuracy"], #, "arch_size"
                                   aggfunc={
-                                            # "accuracy_test": [lambda x: (np.mean( np.max(np.array(x.tolist()), axis=0)) *100).round(1) ,
-                                            #                 lambda x: (np.max(np.array(x.tolist())) *100).round(1),
-                                            #                 lambda x: (np.min( np.max( (np.array(x.tolist()) ) , axis=1) ) *100).round(1) ],
-                                            "train_time":[lambda x:np.mean(np.sum(x.tolist(), axis=1))]}) #"config" ,lambda x: np.min(np.array(x.tolist())) ,"epsilon","zeta_anneal" , axis=1
-    print(tab_set)
-    print(tab_set.shape)
-    print(type(tab_set))
-    tab_set.to_latex("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/set_traintimes_tabular.tex")
-
-    tab_set = df_set.pivot_table(index =["dataset","start_imp","workers"],columns=["epsilon"], values=[ "train_time"], #, "arch_size"
+                                            "accuracy": lambda x: [(np.mean( np.max(np.array(x.tolist()), axis=1) ) ).round(1) ,
+                                                            (np.max(np.array(x.tolist()))).round(1),
+                                                            (np.min( np.max( (np.array(x.tolist()) ) , axis=1) )).round(1) ],
+                                            #"train_time":[lambda x:np.mean(np.sum(x.tolist(), axis=1))]}) #"config" ,lambda x: np.min(np.array(x.tolist())) ,"epsilon","zeta_anneal" , axis=1
+                                                })
+    print(tab_lth_all)
+    print(tab_lth_all.shape)
+    print(type(tab_lth_all))
+    tab_lth_all.to_latex("/media/jan/9A2CA6762CA64CD7/ba_results/lth/lth_performance.tex")  
+    tab_lth_all = df_lth_selected.pivot_table(index =["dataset","patience","arch_size"],columns=["compression"], values=["accuracy"], #, "arch_size"
                                   aggfunc={
-                                            # "accuracy_test": [lambda x: (np.mean( np.max(np.array(x.tolist()), axis=0)) *100).round(1) ,
-                                            #                 lambda x: (np.max(np.array(x.tolist())) *100).round(1),
-                                            #                 lambda x: (np.min( np.max( (np.array(x.tolist()) ) , axis=1) ) *100).round(1) ],
-                                            "train_time":[lambda x:np.mean(np.sum(x.tolist(), axis=1))]}) #"config" ,lambda x: np.min(np.array(x.tolist())) ,"epsilon","zeta_anneal" , axis=1
-    print(tab_set)
-    print(tab_set.shape)
-    print(type(tab_set))
-    tab_set.to_latex("/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/set_traintimes_tabular_avg_over_archsize.tex")
+                                            "accuracy": lambda x: [(np.mean( np.max(np.array(x.tolist()), axis=1) ) ).round(1) ,
+                                                            (np.max(np.array(x.tolist()))).round(1),
+                                                            (np.min( np.max( (np.array(x.tolist()) ) , axis=1) )).round(1) ],
+                                            #"train_time":[lambda x:np.mean(np.sum(x.tolist(), axis=1))]}) #"config" ,lambda x: np.min(np.array(x.tolist())) ,"epsilon","zeta_anneal" , axis=1
+                                                })
+    print(tab_lth_all)
+    print(tab_lth_all.shape)
+    print(type(tab_lth_all))
+    tab_lth_all.to_latex("/media/jan/9A2CA6762CA64CD7/ba_results/lth/lth_performance.tex")
+
+
 
 def plot_anneal_epsilon_comparison():
     df_set, _ = dw.load_averaged_dataframes()
@@ -396,6 +425,32 @@ def plot_anneal_epsilon_comparison():
             plt.savefig(f"plots/anneal_comp/{dataset}/{name}")
             plt.close("all")
 
+def plot_impotance_pruning_difference():
+    df_set, _,_ = dw.load_dataframes()
+    for num_worker in [0,3]:
+        groups = df_set[df_set.workers.eq(num_worker)].groupby("start_imp")
+        plt.figure(figsize=(10 ,5))
+        avg_vals= {}
+        for name, data in groups:
+            print(name)
+            vals = np.array(data["accuracy_test"].tolist())
+            vals = np.average(vals, axis=0)
+            plt.plot(vals, label=f"Start Epoch: {name}")
+            avg_vals[name]=np.max(vals)*100
+        #tbl = df_set[].pivot_table(columns="start_imp",  aggfunc={lambda x: np.average(np.array(x.tolist()), axis=0)})
+        #print(tbl)
+
+        #plt.yscale("logit")
+        plt.vlines([140,200], ymin=0.45, ymax=0.8, colors=["orange","green"], ls="--")
+        plt.xlabel("Training Epochs")
+        plt.ylabel("Test Accuracy")
+        plt.suptitle("Importance Pruning comparison")
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(f"plots/compare_importance_pruning_{num_worker}workers_linear")
+        plt.close("all")
+        print(avg_vals)
+
 if __name__ == "__main__":
     #plot_compare_performance_configs_Set()
     #plot_dataset_performance_set()
@@ -407,5 +462,7 @@ if __name__ == "__main__":
     #plot_non_averaged()
     #plot_all_lth_raw()
     #plot_compare_single_multi_worker()
-    create_tabular_overview()
+    # create_tabular_overview()
     #plot_anneal_epsilon_comparison()
+    #plot_indivdual_traintimes_set()
+    plot_impotance_pruning_difference()

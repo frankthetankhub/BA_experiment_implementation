@@ -84,6 +84,10 @@ def result_paths_to_df_lth_all(paths, save=False):
     cifar = re.compile(".*cifar.*")
     lt_all = re.compile(".*lt_all_.*")
     df = pd.DataFrame(columns=["dataset","arch_size","seed","compression", "accuracy","trainloss","testloss","patience"])
+    #This is a bit hacky, but is done so the rounding error of file names does not propagate into the dataframe.
+    compression_values = [100.0, 80.1, 64.2, 51.4, 41.2, 33.0, 26.4, 21.2, 16.9, 13.6, 10.9, 8.7, 7.0, 5.6, 4.5, 3.6, 2.9, 2.3, 1.8, 1.5, 1.2, 1.0, 0.8, 0.6] # [round(100*0.801**x,1) for x in range(24)] 
+
+
     print(len(paths))
     for i, path in enumerate(paths):
         dataset=None
@@ -109,8 +113,15 @@ def result_paths_to_df_lth_all(paths, save=False):
             if lt_all.match(p):
                 p = p.strip(".dat")
                 v = p.split("_")
-                compression = float(v[-1])
+                comp_val = float(v[-1])
+                #compression = min(compression_values, key=lambda x:abs(x-comp_val)) #float(v[-1])
                 #print(compression)
+                for comp in compression_values[::-1]:
+                    if np.isclose(comp_val,comp, rtol=0.1, atol=0.0999):
+                        compression = comp
+                        print(f"value from file: {comp_val}")
+                        print(f"assigned value: {comp}")
+                        break
                 name = v[-2]
                 if name == "loss":
                     print(path)
@@ -280,11 +291,18 @@ def make_avg_df(df, mode="set", as_list=True):
         #print(data['accuracy_test'])
         #print(data['accuracy_test'].tolist())
         if mode == "set":
-            acc_t = np.mean(data['accuracy_test'].tolist(), axis=0)
-            acc_tr = np.mean(data['accuracy_train'].tolist(), axis=0)
-            loss_t = np.mean(data['loss_test'].tolist(), axis=0)
-            loss_tr = np.mean(data['loss_train'].tolist(), axis=0)
-            time = np.mean(data['train_time'].tolist(), axis=0)
+            # print(name)
+            # print(np.array(data['accuracy_test'].tolist()))
+            acc_t = np.mean(np.array(data['accuracy_test'].tolist()), axis=0)
+            acc_tr = np.mean(np.array(data['accuracy_train'].tolist()), axis=0)
+            loss_t = np.mean(np.array(data['loss_test'].tolist()), axis=0)
+            loss_tr = np.mean(np.array(data['loss_train'].tolist()), axis=0)
+            time = np.mean(np.array(data['train_time'].tolist()), axis=0)
+            # acc_t = np.mean(data['accuracy_test'].tolist(), axis=0)
+            # acc_tr = np.mean(data['accuracy_train'].tolist(), axis=0)
+            # loss_t = np.mean(data['loss_test'].tolist(), axis=0)
+            # loss_tr = np.mean(data['loss_train'].tolist(), axis=0)
+            # time = np.mean(data['train_time'].tolist(), axis=0)
             if as_list:
                 acc_t = acc_t.tolist()
                 acc_tr = acc_tr.tolist()
@@ -361,7 +379,7 @@ def create_all_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results", sav
 if __name__ == "__main__":
     # df, _ ,__ = load_dataframes()
     #make_avg_df(df)
-    create_all_dataframes(save=True, save_non_averaged = True, specs=["lth_all"])
+    create_all_dataframes(save=True, save_non_averaged = True) #, specs=["lth_all"]
 
     # path = "/media/jan/9A2CA6762CA64CD7/ba_results" #cifar10_medium.txt//configs5/ large_scale/results/s_m_p
     # df_raw_set = get_data_as_dataframe(path,True)
