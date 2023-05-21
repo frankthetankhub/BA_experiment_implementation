@@ -33,7 +33,7 @@ for FILE in configs/$2/*;
             echo $base_conf_name
             CONF_FILE_SAVE_PARAMETER="$base_conf_name/$base_name"
             EXP_SETUP_ARGS=$(cat $CONF)
-            cmd="mpiexec -n 4 pdm run python parallel_training.py $ARGS $EXP_SETUP_ARGS --config_file $CONF_FILE_SAVE_PARAMETER $2"
+            cmd="mpiexec -n 4 pdm run python parallel_training.py $ARGS $EXP_SETUP_ARGS --config_file $CONF_FILE_SAVE_PARAMETER"
             if [[ $base_name == cifar10* ]];
             then
                 echo cifar10
