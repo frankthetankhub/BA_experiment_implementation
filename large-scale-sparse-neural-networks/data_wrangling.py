@@ -393,7 +393,7 @@ def create_all_dataframes(base_dir="/media/jan/9A2CA6762CA64CD7/ba_results", sav
 if __name__ == "__main__":
     # df, _ ,__ = load_dataframes()
     #make_avg_df(df)
-    create_all_dataframes(save=True, save_non_averaged = True, specs=["set"]) #, specs=["lth_all"]
+    create_all_dataframes(save=True, save_non_averaged = True, specs=["set","lth_all"]) #, specs=["lth_all"]
 
     # path = "/media/jan/9A2CA6762CA64CD7/ba_results" #cifar10_medium.txt//configs5/ large_scale/results/s_m_p
     # df_raw_set = get_data_as_dataframe(path,True)
