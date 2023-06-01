@@ -12,34 +12,11 @@ import itertools
 omni_dict_location = "/media/jan/9A2CA6762CA64CD7/ba_results/large_scale/omni_dict.json"
 lth_compression_values = [100.0, 80.1, 64.2, 51.4, 41.2, 33.0, 26.4, 21.2, 16.9, 13.6, 10.9, 8.7, 7.0, 5.6, 4.5, 3.6, 2.9, 2.3, 1.8, 1.5, 1.2, 1.0, 0.8, 0.6]
 
-def plot(y_values):
-    i=0
-    metrics = ["Training Loss","Testing Loss","Training Accuracy","Testing Accuracy","Training Time per Epoch"]
-    for metric in y_values:
-        
-        l=metric.shape[0]
-        print(l)
-        a = np.arange(l)
-        plt.plot(a, metric, c="blue", label="Winning tickets") 
-        # plt.plot(a, c, c="red", label="Random reinit") 
-        t = metrics[i]
-        print(t)
-        plt.title(t)
-        # plt.xlabel("Weights %") 
-        # plt.ylabel("Test accuracy") 
-        plt.xticks(np.arange(l,step=10), rotation ="vertical") 
-        # plt.ylim(0,100)
-        # plt.legend() 
-        plt.grid(color="gray") 
-        plt.savefig(f"{os.getcwd()}/plots/{i}.png", dpi=1200, bbox_inches='tight') 
-        plt.close()
-        i+=1
-
 
 def plot_dataset_performance_averaged_set():
     df_set, df_lth_best, df_lth_raw = dw.load_dataframes()
     averaged = dw.make_avg_df(df_set)
-    g = averaged[averaged.workers.eq(0)].groupby("dataset")["zeta_anneal","accuracy_test"] #  & averaged.zeta_anneal.eq(False)
+    g = averaged[averaged.workers.eq(0)].groupby("dataset")["zeta_anneal","accuracy_test"]
     labels = []
     plt.figure(figsize=(15,10))
     for label, data in g:
@@ -53,7 +30,7 @@ def plot_dataset_performance_averaged_set():
 
 def plot_dataset_performance_set():
     averaged, _ = dw.load_averaged_dataframes()
-    g = averaged[averaged.workers.eq(0)].groupby(["dataset","arch_size"])["zeta_anneal","accuracy_test"] #  & averaged.zeta_anneal.eq(False)
+    g = averaged[averaged.workers.eq(0)].groupby(["dataset","arch_size"])["zeta_anneal","accuracy_test"]
     labels = []
     plt.figure(figsize=(15,10))
     for label, data in g:
@@ -85,8 +62,6 @@ def plot_non_averaged():
     print(es.seed)
     i=0
     for v,seed in zip(es.accuracy,es.seed):
-        # if i>1: 
-        #     break
         plt.plot(np.arange(250), v, label=f"LTH, seed:{seed}", linewidth=(10-(i*2)))
         i+=1
     plt.legend()
@@ -100,12 +75,8 @@ def plot_compare_single_multi_worker():
         multi = data[data.workers.eq(3)]
         single = data[data.workers.eq(0)]
         for index,row in multi.iterrows():
-            #print(index)
-            #print(row["accuracy"])
             plt.plot(row["accuracy_test"], alpha=0.2, color="blue", linewidth=1, label=f"WASAP, seed:{row.seed}")
         for index,row in single.iterrows():
-            #print(index)
-            #print(row["accuracy"])
             plt.plot(row["accuracy_test"], color="orange", alpha=0.2, linewidth=1 ,label=f"SET, seed:{row.seed}")
         plt.plot(np.average(np.array(single["accuracy_test"].tolist()), axis=0), color="orange", linewidth=1 ,label=f"Single Worker, average")
         plt.plot(np.average(np.array(multi["accuracy_test"].tolist()), axis=0), color="blue", linewidth=1 ,label=f"WASAP, average")
@@ -113,7 +84,6 @@ def plot_compare_single_multi_worker():
         plt.xlabel("Training Epochs")
         plt.ylabel("Test Accuracy")
         plt.suptitle(f"Performance Comparison of Single Worker and WASAP:\n\nConfig: {name[2]}          Dataset: {name[0].capitalize()}          Architecture Size: {name[1].capitalize()}")
-        #plt.suptitle(f"Performance Comparison of Single Worker and WASAP:\nConfig: {name[2]}\nDataset: {name[0].capitalize()}\n Architecture Size: {name[1].capitalize()}")
         plt.gcf().set_size_inches(15, 8)
         plt.xlim([-0.5, 250])
         plt.tight_layout()
@@ -125,13 +95,12 @@ def plot_compare_single_multi_worker():
         single = data[data.workers.eq(0)] 
         avg_multi=np.average(np.array(multi["accuracy_test"].tolist()),axis=0)
         plt.plot(avg_multi, color="blue", linewidth=1 ,label=f"WASAP")
-        plt.plot(np.average(np.array(single["accuracy_test"].tolist()), axis=0), color="orange", linewidth=1 ,label=f"Single Worker")#3 Workers,averaged over all configs
+        plt.plot(np.average(np.array(single["accuracy_test"].tolist()), axis=0), color="orange", linewidth=1 ,label=f"Single Worker")
         #if name[0]=="cifar10":
         plt.hlines(np.max(avg_multi), 0,250, color="blue", alpha=0.5, ls="--")
         plt.legend()
         plt.xlabel("Training Epochs")
         plt.ylabel("Test Accuracy")
-        #plt.suptitle(f"Performance Comparison of Single Worker and WASAP, Averaged Over All Configurations\nDataset: {name[0].capitalize()}\n Architecture Size: {name[1].capitalize()}")
         plt.suptitle(f"Performance Comparison of Single Worker and WASAP, Averaged Over All Configurations\n\nDataset: {name[0].capitalize()}          Architecture Size: {name[1].capitalize()}")
         plt.gcf().set_size_inches(15, 8)
         plt.xlim([-0.5, 250])
@@ -144,38 +113,27 @@ def plot_all_lth_raw():
     print(df_lth_all.compression) 
     lth_groups = df_lth_all.groupby(["arch_size","dataset","compression"])
     for name,data in lth_groups:
-        #print(data)
-        #print(type(data))
         print(name)
-        b = np.isclose(name[2], [21.18,10.85,5.55,1.05], atol=0.05)#.any()80.1,
+        b = np.isclose(name[2], [21.18,10.85,5.55,1.05], atol=0.05)
         if not b.any():
-            # print(name)
-            # print(data)
             continue
-        pat_15 = data[data.patience.eq(15)]# , np.isclose(data.compression,data, rtol=0.06)
+        pat_15 = data[data.patience.eq(15)]
         pat_50 = data[data.patience.eq(50)]
-        #print(pat_15)
-        #print(pat_50)
+
         plt.Figure(figsize=(10,4))
         for index,row in pat_15.iterrows():
-            #print(index)
-            #print(row["accuracy"])
             plt.plot(row["accuracy"], alpha=0.3, color="blue", linewidth=1, label=f"Patience: 15, seed:{row.seed}")
-            lth_treshold = np.max(df_lth_all[df_lth_all.patience.eq(15) & df_lth_all.seed.eq(row.seed) & df_lth_all.dataset.eq(name[1]) & df_lth_all.arch_size.eq(name[0]) & df_lth_all.compression.eq(100)]["accuracy"].tolist())
-            
+            lth_treshold = np.max(df_lth_all[df_lth_all.patience.eq(15) & df_lth_all.seed.eq(row.seed) & df_lth_all.dataset.eq(name[1]) & df_lth_all.arch_size.eq(name[0]) & df_lth_all.compression.eq(100)]["accuracy"].tolist())         
             comp100= df_lth_all[df_lth_all.patience.eq(15) &df_lth_all.seed.eq(row.seed) & df_lth_all.dataset.eq(name[1]) & df_lth_all.arch_size.eq(name[0]) & df_lth_all.compression.eq(100)]["accuracy"].tolist()
-            #print(comp100)
-            plt.plot(comp100[0], color = "black", alpha=0.3)#,label =f"Patience: 15, seed:{row.seed}, unpruned"
+
+            plt.plot(comp100[0], color = "black", alpha=0.3)
             plt.hlines(lth_treshold,0,250, colors="black", ls="--", linewidth=1)
 
         for index,row in pat_50.iterrows():
-            #print(index)
-            #print(row["accuracy"])
             plt.plot(row["accuracy"], color="orange", alpha=0.3, linewidth=1 ,label=f"Patience: 50, seed:{row.seed}")
             lth_treshold = np.max(df_lth_all[df_lth_all.patience.eq(50) &df_lth_all.seed.eq(row.seed) & df_lth_all.dataset.eq(name[1]) & df_lth_all.arch_size.eq(name[0]) & df_lth_all.compression.eq(100)]["accuracy"].tolist())
             comp100= df_lth_all[df_lth_all.patience.eq(50) &df_lth_all.seed.eq(row.seed) & df_lth_all.dataset.eq(name[1]) & df_lth_all.arch_size.eq(name[0]) & df_lth_all.compression.eq(100)]["accuracy"].tolist()
-            #print(comp100)
-            plt.plot(comp100[0], color = "gray", alpha=0.3)#,label =f"Patience: 50, seed:{row.seed}, unpruned"
+            plt.plot(comp100[0], color = "gray", alpha=0.3)
             plt.hlines(lth_treshold,0,250, colors="gray", ls="--", linewidth=1)
 
         #plt.plot(pat_50, color="red")
@@ -190,26 +148,21 @@ def plot_all_lth_raw():
 
 def plot_individual_performance_config():
     averaged, _ = dw.load_averaged_dataframes()
-    for config in list(range(1,13)):#["cifar10", "mnist", "fashionmnist"]:
+    for config in list(range(1,13)):
         print(averaged)
-        # g = averaged[]
-        # print(g)
+
         g = averaged[averaged.workers.eq(0) & averaged.config.eq(config)].groupby(["dataset", "arch_size"])["zeta_anneal","accuracy_test"] #
         labels = []
         
         plt.figure(figsize=(20,10))
         for label, data in g:
             plt.vlines(x=[140, 200], ymin=0, ymax = 1, colors="gray", ls="--")
-            print(label)
-            # print(type(label))
             labels.append(str(label)+"anneal zeta")
             d1 = data[data.zeta_anneal.eq(True)& data.config.eq(config)]["accuracy_test"]# 
-            #print(d1)
             d1 = np.array(d1.tolist())
             d1 = d1.reshape(-1,250)
             d1 = np.squeeze(np.mean(d1, axis = 0))
             plt.plot(np.arange(250), d1)
-
             labels.append(str(label)+"no anneal")
             d1 = np.array(data[data.zeta_anneal.eq(False)& data.config.eq(config)]["accuracy_test"].tolist())
             d1 = d1.reshape(-1,250)
@@ -228,16 +181,12 @@ def plot_compare_all_configs():
     plt.figure(figsize=(15,10))
     
     for label, data in g:
-        print(label)
-        # print(type(label))
         labels.append(str(label))
         if label<5: ls_stil = "-"
         elif label >8: ls_stil = "--"
         else: ls_stil =":"
         print(data)
         d1 = data["accuracy_test"].tolist()
-        # print([len(l) for l in d1])
-        # d1 = np.array(np.array(d for d in d1))
         d1 = np.array(d1).reshape(-1,250)
         d1 = np.squeeze(np.mean(d1, axis = 0))
         plt.plot(np.arange(250), d1, ls=ls_stil)
@@ -252,12 +201,7 @@ def plot_compare_set_lth2():
     df_set, df_lth = dw.load_averaged_dataframes()
     datasets = df_lth.groupby("dataset")
     for comp, e in zip([21.4,10.85,5.55,1.05],[20,10,5,1]):
-        #plt.rc("font", size=18)
         for name, data in datasets:
-
-            #fig, ax = plt.subplots(1,3)
-            #for arch_size in ["small", "medium", "large"]:
-            #print(arch_size)
             plt.figure(figsize=(10,5))
             plt.suptitle(f"Lottery Ticket vs. Sparse Evolutionary Training \n {name}".title())
             x = np.arange(250)
@@ -339,12 +283,10 @@ def plot_compare_performance_configs_Set():
                 print(config)
                 continue
             data = np.array(data.tolist()).reshape(3,250)
-            data = np.squeeze(np.mean(data, axis = 0)) #df.dataset.eq(dataset) 
+            data = np.squeeze(np.mean(data, axis = 0))
             plt.plot(np.arange(250), data)
             plt.grid("gray")
             plt.yscale("logit")
-            # labels.append(dataset)
-            # plt.plot(np.arange(250), df[df.dataset.eq(dataset) & df.zeta_anneal.eq(False)]["accuracy_test"])
             plt.legend(labels)
         plt.savefig(f"plots/{dataset}_config_comparison.png")
         plt.close()
@@ -355,15 +297,43 @@ def plot_compare_performance_configs_Set():
 
 def plot_anneal_epsilon_comparison():
     df_set, _ = dw.load_averaged_dataframes()
-    #df_set = df_set.drop(columns=["start_imp"])
+    df_set = df_set.drop(columns=["start_imp"])
     for name,data in df_set.groupby(["epsilon", "arch_size"]):
         for dataset in ["cifar10","fashionmnist","mnist"]:
-            #print(data[data.dataset.eq(dataset) & data.workers.eq(0) & data.zeta_anneal.eq(True)& data.start_imp.eq(0)].accuracy_test.tolist()[0])
-            plt.plot(data[data.dataset.eq(dataset) & data.workers.eq(0) & data.zeta_anneal.eq(True)& data.start_imp.eq(0)].accuracy_test.tolist()[0],label="anneal: True")
-            plt.plot(data[data.dataset.eq(dataset) & data.workers.eq(0) & data.zeta_anneal.eq(False)& data.start_imp.eq(0)].accuracy_test.tolist()[0],label="anneal: False")
+            plt.plot(data[data.dataset.eq(dataset) & data.workers.eq(0) & data.zeta_anneal.eq(True)].accuracy_test.tolist()[0],label="zeta decay: True")
+            plt.plot(data[data.dataset.eq(dataset) & data.workers.eq(0) & data.zeta_anneal.eq(False)].accuracy_test.tolist()[0],label="zeta deacay: False")
             plt.legend()
+            plt.tight_layout()
             plt.savefig(f"plots/anneal_comp/{dataset}/{name}")
             plt.close("all")
+    avg_decay= np.average(np.array(df_set[df_set.zeta_anneal.eq(True)].accuracy_test.tolist()), axis=0)
+    avg_nodecay= np.average(np.array(df_set[df_set.workers.eq(0) & df_set.zeta_anneal.eq(False)].accuracy_test.tolist()), axis=0)
+    print(avg_decay)
+    print(avg_nodecay)
+    plt.plot(avg_decay, label = "zeta decay")
+    plt.plot(avg_nodecay, label="no dacy")
+    plt.tight_layout()
+    plt.legend()
+    plt.savefig(f"plots/anneal_comp/avg")
+    plt.close("all")
+
+
+    fig, ax = plt.subplots(1,2)
+    fig.set_size_inches(10, 4)
+    fig.supxlabel("Epochs")
+    fig.supylabel("Test Accuracy")
+    y1= np.average(np.array(df_set[df_set.zeta_anneal.eq(True) & df_set.dataset.eq("cifar10") & df_set.epsilon.eq(1) & df_set.arch_size.eq("large")].accuracy_test.tolist()), axis=0)
+    y2= np.average(np.array(df_set[df_set.workers.eq(0) & df_set.zeta_anneal.eq(False) & df_set.dataset.eq("cifar10") & df_set.epsilon.eq(1) & df_set.arch_size.eq("large")].accuracy_test.tolist()), axis=0)
+    ax[0].plot(y1, label = "zeta decay")
+    ax[0].plot(y2, label="no dacy")
+    y3= np.average(np.array(df_set[df_set.zeta_anneal.eq(True) & df_set.dataset.eq("cifar10") & df_set.epsilon.eq(1) & df_set.arch_size.eq("small")].accuracy_test.tolist()), axis=0)
+    y4= np.average(np.array(df_set[df_set.workers.eq(0) & df_set.zeta_anneal.eq(False) & df_set.dataset.eq("cifar10") & df_set.epsilon.eq(1) & df_set.arch_size.eq("small")].accuracy_test.tolist()), axis=0)
+    ax[1].plot(y3, label = "zeta decay")
+    ax[1].plot(y4, label="no dacy")
+    plt.tight_layout()
+    plt.legend()
+    plt.savefig(f"plots/anneal_comp/multiplot_alt")
+    plt.close("all")
 
 def plot_impotance_pruning_difference():
     df_set, _,_ = dw.load_dataframes()
@@ -377,10 +347,6 @@ def plot_impotance_pruning_difference():
             vals = np.average(vals, axis=0)
             plt.plot(vals, label=f"Start Epoch: {name}")
             avg_vals[name]=np.max(vals)*100
-        #tbl = df_set[].pivot_table(columns="start_imp",  aggfunc={lambda x: np.average(np.array(x.tolist()), axis=0)})
-        #print(tbl)
-
-        #plt.yscale("logit")
         plt.vlines([140,200], ymin=0.45, ymax=0.8, colors=["orange","green"], ls="--")
         plt.xlabel("Training Epochs")
         plt.ylabel("Test Accuracy")
@@ -406,18 +372,12 @@ def plot_epsilon_variance_time_accuracy():
     plt.plot(x,np.array(tt_tab.accuracy_test),label="accuracy")
     plt.xlabel("epsilon")
     plt.ylabel("Time in Minutes\n Accuracy")
-    plt.xticks(x) #tt_tab.index.values  
+    plt.xticks(x)
     plt.legend()
     plt.suptitle("Tradeoff: Sparsity-Accuracy, Sparsity-trainingtime")
     plt.tight_layout()
     plt.savefig("plots/epsilon_comparison_time_and_acc_graph")
     plt.close("all")
-
-    # tt_tab["accuracy_test"] = tt_tab["accuracy_test"]*100
-    # tt_tab.plot(kind="box")
-
-    # plt.savefig("plots/boxplot")
-    # plt.close("all")
 
 def plot_epsilon_arch_size():
     df_set, df_lth_best_acc, df_lth_all = dw.load_dataframes()
@@ -431,19 +391,23 @@ def plot_epsilon_arch_size():
         plt.plot(y_s, label = "small")
         plt.plot(y_m, label = "medium")
         plt.plot(y_l, label = "large")
-        # y_s = np.mean(np.array(data[data.arch_size.eq("small")& data.zeta_anneal.eq(True)]["accuracy_test"].tolist()), axis=0)
-        # y_m = np.mean(np.array(data[data.arch_size.eq("medium")& data.zeta_anneal.eq(True)]["accuracy_test"].tolist()), axis=0)
-        # y_l = np.mean(np.array(data[data.arch_size.eq("large")& data.zeta_anneal.eq(True)]["accuracy_test"].tolist()), axis=0)
-        # plt.plot(y_s, label = "small")
-        # plt.plot(y_m, label = "medium")
-        # plt.plot(y_l, label = "large")
-        # y_s = np.mean(np.array(data[data.arch_size.eq("small")& data.zeta_anneal.eq(False)]["accuracy_test"].tolist()), axis=0)
-        # y_m = np.mean(np.array(data[data.arch_size.eq("medium")& data.zeta_anneal.eq(False)]["accuracy_test"].tolist()), axis=0)
-        # y_l = np.mean(np.array(data[data.arch_size.eq("large")& data.zeta_anneal.eq(False)]["accuracy_test"].tolist()), axis=0)
-        # plt.plot(y_s, ls="--", label = "small")
-        # plt.plot(y_m, ls="--", label = "medium")
-        # plt.plot(y_l, ls="--", label = "large")
+        y_s = np.mean(np.array(data[data.arch_size.eq("small")& data.zeta_anneal.eq(True)]["accuracy_test"].tolist()), axis=0)
+        y_m = np.mean(np.array(data[data.arch_size.eq("medium")& data.zeta_anneal.eq(True)]["accuracy_test"].tolist()), axis=0)
+        y_l = np.mean(np.array(data[data.arch_size.eq("large")& data.zeta_anneal.eq(True)]["accuracy_test"].tolist()), axis=0)
+        plt.plot(y_s, label = "small")
+        plt.plot(y_m, label = "medium")
+        plt.plot(y_l, label = "large")
+        y_s = np.mean(np.array(data[data.arch_size.eq("small")& data.zeta_anneal.eq(False)]["accuracy_test"].tolist()), axis=0)
+        y_m = np.mean(np.array(data[data.arch_size.eq("medium")& data.zeta_anneal.eq(False)]["accuracy_test"].tolist()), axis=0)
+        y_l = np.mean(np.array(data[data.arch_size.eq("large")& data.zeta_anneal.eq(False)]["accuracy_test"].tolist()), axis=0)
+        plt.plot(y_s, ls="--", label = "small")
+        plt.plot(y_m, ls="--", label = "medium")
+        plt.plot(y_l, ls="--", label = "large")
+        plt.xlabel("Epochs")
+        plt.ylabel("Test Accuracy")
         plt.legend()
+        plt.suptitle(f"Average performance of architecture by sparsity level and Dataset\n Epsilon: {name[0]}       Dataset:{name[1]}")
+        plt.tight_layout()
         plt.savefig(f"plots/epsilon_archsize_comb_by_dataset/{name}")
         plt.close("all")
 
@@ -474,22 +438,21 @@ def compare_dst_lt_training_time():
         plt.plot
 
 if __name__ == "__main__":
-    # plot_compare_performance_configs_Set()
-    # plot_dataset_performance_set()
-    # plot_individual_performance_config()
-    # plot_compare_all_configs()
-    # plot_dataset_performance_averaged_set()
-    # plot_dataset_performance_set()
-    # plot_compare_set_lth2()
-    # plot_non_averaged()
-    #plot_all_lth_raw()
-    # plot_compare_single_multi_worker()
-    # #plot_anneal_epsilon_comparison() #####
-    # plot_indivdual_traintimes_set()
-    # plot_impotance_pruning_difference()
-    #plot_epsilon_variance_time_accuracy()
-    # #-------------------
-    # #plot_epsilon_variance_time_accuracy()
-    # plot_epsilon_arch_size()
-    #plot_imp_prune_avg()
+    plot_compare_performance_configs_Set()
+    plot_dataset_performance_set()
+    plot_individual_performance_config()
+    plot_compare_all_configs()
+    plot_dataset_performance_averaged_set()
+    plot_dataset_performance_set()
     plot_compare_set_lth2()
+    plot_non_averaged()
+    plot_all_lth_raw()
+    plot_compare_single_multi_worker()
+    #plot_anneal_epsilon_comparison() #####
+    plot_indivdual_traintimes_set()
+    plot_impotance_pruning_difference()
+    plot_epsilon_variance_time_accuracy()
+    plot_epsilon_arch_size()  
+    plot_imp_prune_avg()
+    plot_compare_set_lth2()
+    plot_anneal_epsilon_comparison()
