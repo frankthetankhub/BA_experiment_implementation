@@ -1,0 +1,9 @@
+\begin{tabular}{lrrrr}
+\toprule
+epsilon &         1  &         5  &         10 &         20 \\
+workers &            &            &            &            \\
+\midrule
+0       &  23.108336 &  30.552764 &  40.359183 &  53.071838 \\
+3       &  59.380255 &  61.396864 &  64.505959 &  66.411237 \\
+\bottomrule
+\end{tabular}
