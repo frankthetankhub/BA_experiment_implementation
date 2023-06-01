@@ -1,0 +1,11 @@
+\begin{tabular}{lrr}
+\toprule
+{} &  accuracy\_test &  train\_time \\
+epsilon &                &             \\
+\midrule
+1       &       0.640414 &   35.139121 \\
+5       &       0.784199 &   40.783233 \\
+10      &       0.810808 &   48.368262 \\
+20      &       0.823634 &   57.518305 \\
+\bottomrule
+\end{tabular}

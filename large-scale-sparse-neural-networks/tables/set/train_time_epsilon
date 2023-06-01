@@ -1,0 +1,11 @@
+\begin{tabular}{lr}
+\toprule
+{} &  train\_time \\
+epsilon &             \\
+\midrule
+1       &   35.139121 \\
+5       &   40.783233 \\
+10      &   48.368262 \\
+20      &   57.518305 \\
+\bottomrule
+\end{tabular}

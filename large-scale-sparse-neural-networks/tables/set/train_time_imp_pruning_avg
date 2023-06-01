@@ -1,0 +1,7 @@
+\begin{tabular}{lrrr}
+\toprule
+start\_imp &        140 &        200 &        250 \\
+\midrule
+train\_time &  47.517215 &  44.604709 &  44.252404 \\
+\bottomrule
+\end{tabular}
